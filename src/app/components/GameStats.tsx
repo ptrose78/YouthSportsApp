@@ -2,13 +2,12 @@
 'use client'
 
 import { useEffect } from "react";
-import { useSelector } from "react-redux";
-import { useAppDispatch } from "@/app/store/hooks";
+import { useAppSelector, useAppDispatch } from "@/app/store/hooks";
 import { getPlayerStats } from "@/app/store/features/statsSlice";
 
 const GameStats = ({ gameId }: { gameId: string }) => {
   const dispatch = useAppDispatch();
-  const { stats, loading, error } = useSelector((state: any) => state.stats);
+  const { stats, loading, error } = useAppSelector((state: any) => state.stats);
 
   useEffect(() => {
     dispatch(getPlayerStats(gameId));

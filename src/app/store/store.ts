@@ -2,10 +2,12 @@
 
 import { configureStore } from "@reduxjs/toolkit";
 import { statsReducer } from "./features/statsSlice"; // Update the path if necessary
+import { rosterReducer } from "./features/rosterSlice";
 
 export const store = configureStore({
   reducer: {
-    stats: statsReducer, // Add the stats reducer
+    stats: statsReducer,
+    roster: rosterReducer
   },
 });
 
