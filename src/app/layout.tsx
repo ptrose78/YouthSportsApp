@@ -1,4 +1,5 @@
 // app/layout.tsx (Server-side component)
+import "./globals.css";
 import { Metadata } from "next";
 import ClientLayout from '@/app/RootLayout.client'; // Import ClientLayout
 
