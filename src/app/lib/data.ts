@@ -276,6 +276,9 @@ export async function createGame(opponent_name: string) {
       throw new Error(updateSiteDataError.message);
     }
 
+    // Step 4: Reset player stats
+    await resetPlayerStats();
+
     return gameData;
   } catch (error) {
     console.error("Error in createGame:", error);
@@ -546,4 +549,34 @@ export async function savePlayerStats(player_id: string | number, stats: PlayerS
   }
 
   return data;
+}
+
+export async function resetPlayerStats() {
+  try {
+
+    const siteData = await getSiteData();
+
+    if (!siteData) {
+      throw new Error("Site data not found.");
+    }
+
+    const team_id = siteData[0].team_id;
+    const game_id = siteData[0].game_id;  
+
+    const { error } = await supabase
+      .from("players")
+      .update({ points: 0, rebounds: 0, assists: 0 })
+      .eq("team_id", team_id) // Reset only players belonging to this team
+      .eq("game_id", game_id);
+
+    if (error) {
+      console.error("Error resetting player stats:", error.message);
+      throw new Error(error.message);
+    }
+
+    console.log("✅ Player stats reset for team:", team_id);
+  } catch (error) {
+    console.error("Error in resetPlayerStats:", error);
+    throw error;
+  }
 }
