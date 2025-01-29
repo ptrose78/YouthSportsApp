@@ -114,7 +114,6 @@ export async function saveUser(email: string, team_name: string) {
   }
 }
 
-
 // Function to assign players (existing and new) to a game
 export async function assignPlayersToGame(newPlayerName?: string, new_game_id?: string) {
   try {
@@ -513,8 +512,22 @@ export async function createSiteData(user_id?: string, team_id?: string, game_id
 
 
 
-export async function savePlayerStats(playerId: string | number, gameId: string, stats: PlayerStats) {
+export async function savePlayerStats(player_id: string | number, stats: PlayerStats) {
   const { points, rebounds, assists } = stats;
+  console.log(stats)
+  
+  const siteData = await getSiteData();
+
+  if (!siteData) {
+    throw new Error("Site data not found.");
+  }
+
+  const game_id = siteData[0].game_id;
+
+  if (!game_id) {
+    throw new Error("Game ID not found in site data.");
+  }
+
 
   const { data, error } = await supabase
     .from("players")
@@ -524,8 +537,8 @@ export async function savePlayerStats(playerId: string | number, gameId: string,
       assists,
       updated_at: new Date().toISOString(), // Optionally track when the update happened
     })
-    .eq("id", playerId) // Match the correct player
-    .eq("game_id", gameId); // Match the correct game
+    .eq("player_id", player_id) // Match the correct player
+    .eq("game_id", game_id); // Match the correct game
 
   if (error) {
     console.error("Error updating stats:", error.message);

@@ -4,6 +4,7 @@ import { useDrop } from "react-dnd";
 import { useAppDispatch } from "@/app/store/hooks";
 import { getPlayers } from "@/app/store/features/dataSlice";
 import { savePlayerStats } from "../lib/data";
+import { supabase } from "../lib/supabaseClient";
 
 interface Player {
   id: string | number;
@@ -12,6 +13,7 @@ interface Player {
   rebounds: number;
   assists: number;
   game_id: string;
+  player_id: string;
 }
 
 const ActivePlayers = () => {
@@ -32,9 +34,38 @@ const ActivePlayers = () => {
     }),
   });
 
-  const addPlayerToActive = (player: Player) => {
-    if (!activePlayers.find((p) => p.id === player.id)) {
-      setActivePlayers((prev) => [...prev, player]);
+  const addPlayerToActive = async (player: Player) => {
+    if (activePlayers.find((p) => p.player_id === player.player_id)) {
+      return; // Prevent duplicate entries
+    }
+  
+    try {
+      // Fetch the latest stats from Supabase using player_id
+      const { data: latestStats, error } = await supabase
+        .from("players")
+        .select("points, rebounds, assists")
+        .eq("player_id", player.player_id)
+        .order("created_at", { ascending: false }) // Get the latest entry
+        .limit(1)
+        .single();
+  
+      if (error) {
+        console.error("Error fetching latest stats:", error.message);
+        return;
+      }
+  
+      // Merge the latest stats with the player object
+      const updatedPlayer = {
+        ...player,
+        points: latestStats?.points || 0,
+        rebounds: latestStats?.rebounds || 0,
+        assists: latestStats?.assists || 0,
+      };
+  
+      // Add player to active list
+      setActivePlayers((prev) => [...prev, updatedPlayer]);
+    } catch (err) {
+      console.error("Error adding player to active list:", err);
     }
   };
 
@@ -52,12 +83,11 @@ const ActivePlayers = () => {
     prev.filter((player)=>player.id !== playerId)
     )
   
-    await savePlayerStats(player.id, player.game_id, {
+    await savePlayerStats(player.player_id, {
       points: player.points,
       rebounds: player.rebounds,
       assists: player.assists,
     });
-    dispatch(getPlayers());
   }
 
   return (

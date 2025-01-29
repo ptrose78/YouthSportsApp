@@ -18,6 +18,7 @@ interface Player {
 }
 
 const DraggablePlayer = ({ player }: { player: Player }) => {
+  console.log(player)
   const [{ isDragging }, dragRef] = useDrag(() => ({
     type: "PLAYER",
     item: player,

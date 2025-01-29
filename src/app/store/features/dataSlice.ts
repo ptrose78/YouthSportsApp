@@ -33,7 +33,8 @@ export const getPlayers = createAsyncThunk("data/getPlayers", async () => {
   );
 });
 
-// Async thunk to save siteData
+// Note: SiteData is saved in the database.
+// Legacy: Async thunk to save siteData 
 export const saveCreatedSiteData = createAsyncThunk("data/saveCreatedSiteData", async (siteData: SiteData) => {
   const response = await fetch("/api/siteData", {
     method: "POST",
@@ -46,7 +47,7 @@ export const saveCreatedSiteData = createAsyncThunk("data/saveCreatedSiteData", 
   return siteData;
 });
 
-// Async thunk to update siteData
+// Legacy: Async thunk to update siteData 
 export const saveUpdatedSiteData = createAsyncThunk("data/saveUpdatedSiteData", async (siteData: SiteData) => {
   const response = await fetch("/api/siteData", {
     method: "PUT",
@@ -59,7 +60,7 @@ export const saveUpdatedSiteData = createAsyncThunk("data/saveUpdatedSiteData", 
   return siteData;
 });
 
-// Async thunk to update playerData
+// Legacy: Async thunk to update playerData
 export const saveUpdatedPlayerData = createAsyncThunk("data/saveUpdatedPlayerData", async (siteData: SiteData) => {
   const response = await fetch("/api/player", {
     method: "PUT",
@@ -101,12 +102,6 @@ const dataSlice = createSlice({
   name: "data",
   initialState,
   reducers: {
-    updateSiteData(state, action: PayloadAction<SiteData>) {
-      state.siteData = { ...state.siteData, ...action.payload };
-    },
-    setSiteData(state, action: PayloadAction<SiteData>) {
-      state.siteData = action.payload;
-    },
   },
   extraReducers: (builder) => {
     builder
@@ -142,7 +137,7 @@ const dataSlice = createSlice({
 });
 
 // Export actions and reducer
-export const { updateSiteData, setSiteData } = dataSlice.actions;
+
 export const selectUsers = (state: { data: { users: any } }) => state.data.users;
 export const selectTeams = (state: { data: { teams: any } }) => state.data.teams;
 export const selectGames = (state: { data: { games: any } }) => state.data.games;
