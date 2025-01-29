@@ -5,9 +5,19 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { useDrag } from "react-dnd";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
-import { getRoster } from "../store/features/rosterSlice";
+import { getPlayers } from "../store/features/dataSlice";
 
-const DraggablePlayer = ({ player }: { player: { id: string | number; player_name: string } }) => {
+interface Player {
+  id: string | number;
+  game_id: string;
+  team_id: string;
+  player_name: string;
+  points: number;
+  rebounds: number;
+  assists: number;
+}
+
+const DraggablePlayer = ({ player }: { player: Player }) => {
   const [{ isDragging }, dragRef] = useDrag(() => ({
     type: "PLAYER",
     item: player,
@@ -30,12 +40,12 @@ const DraggablePlayer = ({ player }: { player: { id: string | number; player_nam
   );
 };
 
-const Roster = () => {
+const Players = () => {
   const dispatch = useAppDispatch();
-  const { players, loading, error } = useAppSelector((state) => state.roster);
+  const { players, loading, error } = useAppSelector((state) => state.data);
 
   useEffect(() => {
-    dispatch(getRoster());
+    dispatch(getPlayers());
   }, [dispatch]);
 
   if (loading) return <p className="text-center">Loading roster...</p>;
@@ -49,7 +59,7 @@ const Roster = () => {
           {players.map((player) => (
             <DraggablePlayer 
               key={player.id} 
-              player={{ id: player.id, player_name: player.player_name }} 
+              player={player} 
             />
           ))}
         </ul>
@@ -58,4 +68,4 @@ const Roster = () => {
   );
 };
 
-export default Roster;
+export default Players;

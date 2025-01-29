@@ -2,12 +2,12 @@
 
 import React, { useState } from "react";
 import { useAppDispatch } from "@/app/store/hooks";
-import { savePlayer } from "@/app/lib/data";
-import { getRoster } from "@/app/store/features/rosterSlice";
+import { getPlayers } from "@/app/store/features/dataSlice";
 
 const savePlayerToRoster = async (player_name: string) => {
+  
   try {
-    const response = await fetch("/api/roster", {
+    const response = await fetch("/api/player", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ player_name }),
@@ -21,7 +21,8 @@ const savePlayerToRoster = async (player_name: string) => {
   }
 };
 
-const RosterForm = () => {
+const PlayerForm = () => {
+ 
   const [playerName, setPlayerName] = useState("");
   const dispatch = useAppDispatch();
 
@@ -30,11 +31,13 @@ const RosterForm = () => {
 
     try {
       // Save the player to the database
-      await savePlayerToRoster(playerName); // Pass the actual `team_id`
-      setPlayerName("");
+      if (playerName) {
+        await savePlayerToRoster(playerName);
+        setPlayerName("");
 
-      // Refresh the roster
-      dispatch(getRoster());
+        // Refresh the roster
+        await dispatch(getPlayers());
+      }
     } catch (error) {
       console.error("Error saving player:", error);
     }
@@ -54,4 +57,4 @@ const RosterForm = () => {
   );
 };
 
-export default RosterForm;
+export default PlayerForm;

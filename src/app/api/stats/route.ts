@@ -15,7 +15,7 @@ export async function POST(request: Request) {
 
   try {
     const result = await savePlayerStats(playerId, gameId, stats);
-    return NextResponse.json({ message: "Stats saved!", result });
+    return NextResponse.json({ message: "Stats saved!", result }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: (error as Error).message }, { status: 500 });
   }

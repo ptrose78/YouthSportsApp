@@ -1,13 +1,12 @@
 'use client'
 
 import { configureStore } from "@reduxjs/toolkit";
-import { statsReducer } from "./features/statsSlice"; // Update the path if necessary
-import { rosterReducer } from "./features/rosterSlice";
+
+import { dataReducer } from "./features/dataSlice";
 
 export const store = configureStore({
   reducer: {
-    stats: statsReducer,
-    roster: rosterReducer
+    data: dataReducer
   },
 });
 
