@@ -31,6 +31,7 @@ const ActivePlayers = () => {
   const gameClock = useSelector(selectGameClock);
   const isGameRunning = useSelector(selectIsGameRunning);
 
+  // Drop player into active players list
   const [{ isOver }, dropRef] = useDrop<Player, void, { isOver: boolean }>({
     accept: "PLAYER",
     drop: (item) => {
@@ -45,6 +46,7 @@ const ActivePlayers = () => {
     }),
   });
 
+  // Increment game clock and update player timers
   useEffect(() => {
     if (!isGameRunning) return;
 
@@ -63,6 +65,7 @@ const ActivePlayers = () => {
     return () => clearInterval(interval);
   }, [isGameRunning, dispatch]);
 
+  // Add player to active players list
   const addPlayerToActive = async (player: Player) => {
     if (activePlayers.find((p) => p.player_id === player.player_id)) return;
 
@@ -73,26 +76,30 @@ const ActivePlayers = () => {
         points: latestStats?.[0]?.points ?? 0,
         rebounds: latestStats?.[0]?.rebounds ?? 0,
         assists: latestStats?.[0]?.assists ?? 0,
+        time_played: playerTimers[player.player_id] || 0,
       };
 
       setActivePlayers((prev) => [...prev, updatedPlayer]);
-      setPlayerTimers((prev) => ({ ...prev, [player.id]: 0 }));
+      setPlayerTimers((prev) => ({ ...prev, [player.player_id]: 0 }));
     } catch (err) {
       console.error("Error adding player:", err);
     }
   };
 
+  // Remove player from active players list and save stats
   const removePlayerFromActive = async (playerId: string, player: Player) => {
     setActivePlayers((prev) => prev.filter((p) => p.player_id !== playerId));
     setPlayerTimers((prev) => {
       const { [player.id]: _, ...rest } = prev;
       return rest;
-    });
+    });    
 
+    // Save stats to database
     await savePlayerStats(player.player_id, {
       points: player.points,
       rebounds: player.rebounds,
       assists: player.assists,
+      time_played: playerTimers[player.id] || 0,
     });
   };
 
@@ -100,12 +107,13 @@ const ActivePlayers = () => {
     isGameRunning ? dispatch(stopGameClock()) : dispatch(startGameClock());
   };
 
-  // 
+  // Format time for display
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     return `${minutes}:${(seconds % 60).toString().padStart(2, "0")}`;
   };
 
+  // Render component
   return (
     <div
       ref={dropRef as unknown as React.RefObject<HTMLDivElement>}
@@ -113,12 +121,12 @@ const ActivePlayers = () => {
         isOver ? "bg-gray-200" : "bg-white"
       }`}
     >
-      <h2 className="text-center text-lg font-bold mb-4">Active Players</h2>
+      <h1 className="text-center text-2xl font-bold mb-4">Active Players</h1>
 
       {/* Game Clock Controls */}
       <button
         onClick={toggleGameClock}
-        className="mb-4 px-4 py-2 bg-blue-500 text-white rounded-lg"
+        className="mb-4 px-4 py-2 bg-blue-500 text-white rounded-lg mx-auto block"
       >
         {isGameRunning ? "Pause Game" : "Start Game"}
       </button>
@@ -133,7 +141,7 @@ const ActivePlayers = () => {
         {activePlayers.map((player) => (
           <div key={player.id.toString()} className="relative bg-purple-500 text-white p-4 mb-4 rounded-lg">
             <h3>{player.player_name}</h3>
-            <button className="absolute top-4 right-4 bg-red-600 hover:bg-red-700 text-white font-bold px-2 py-1 rounded" onClick={() => removePlayerFromActive(player.player_id, player)}>X</button>
+            <button onClick={() => removePlayerFromActive(player.player_id, player)}className="absolute top-4 right-4 bg-red-600 hover:bg-red-700 text-white font-bold px-2 py-1 rounded">X</button>
             <div>Time on Court: {formatTime(playerTimers[player.id] || 0)}</div>
 
             <div className="grid grid-cols-3 gap-4 mt-2">

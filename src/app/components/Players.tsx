@@ -15,6 +15,7 @@ interface Player {
   points: number;
   rebounds: number;
   assists: number;
+  time_played: number;
 }
 
 const DraggablePlayer = ({ player }: { player: Player }) => {
@@ -54,7 +55,7 @@ const Players = () => {
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="p-4 bg-gray-100 rounded-lg">
-        <h2 className="text-center mb-4 text-xl font-semibold">Roster</h2>
+        <h2 className="text-center mb-4 text-2xl font-semibold">Roster</h2>
         <ul className="list-none p-0">
           {players.map((player) => (
             <DraggablePlayer 

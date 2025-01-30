@@ -1,7 +1,6 @@
 // lib/data.ts
 import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "crypto";
-import { isUUID } from "@/app/utils/isUUID"
 
 // Get environment variables
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -22,6 +21,7 @@ interface PlayerStats {
   points: number;
   rebounds: number;
   assists: number;
+  time_played: number;
 }
 // Define Player interface
 interface Player {
@@ -30,6 +30,7 @@ interface Player {
   points: number;
   rebounds: number;
   assists: number;
+  time_played: number;
 }
 
 
@@ -516,7 +517,7 @@ export async function createSiteData(user_id?: string, team_id?: string, game_id
 
 
 export async function savePlayerStats(player_id: string | number, stats: PlayerStats) {
-  const { points, rebounds, assists } = stats;
+  const { points, rebounds, assists, time_played } = stats;
   console.log(stats)
   
   const siteData = await getSiteData();
@@ -538,6 +539,7 @@ export async function savePlayerStats(player_id: string | number, stats: PlayerS
       points,
       rebounds,
       assists,
+      time_played,
       updated_at: new Date().toISOString(), // Optionally track when the update happened
     })
     .eq("player_id", player_id) // Match the correct player
