@@ -22,6 +22,7 @@ interface Player {
   assists: number;
   game_id: string;
   player_id: string;
+  time_played: number;
 }
 
 const ActivePlayers = () => {
@@ -52,12 +53,11 @@ const ActivePlayers = () => {
     if (!isGameRunning) return;
 
     const interval = setInterval(() => {
-      dispatch(incrementGameClock());
       setPlayerTimers((prevTimers) =>
         Object.fromEntries(
-          Object.entries(prevTimers).map(([playerId, time]) => [
-            playerId,
-            time + 1,
+          Object.entries(prevTimers).map(([playerTimerId, timePlayed]) => [
+            playerTimerId,
+            timePlayed + 1
           ])
         )
       );
@@ -72,16 +72,19 @@ const ActivePlayers = () => {
 
     try {
       const latestStats = await getLatestStats(player.player_id);
+      console.log('latestStats', latestStats);
+      console.log('playerTimers[player.player_id]', playerTimers[player.player_id]);
       const updatedPlayer = {
         ...player,
         points: latestStats?.[0]?.points ?? 0,
         rebounds: latestStats?.[0]?.rebounds ?? 0,
         assists: latestStats?.[0]?.assists ?? 0,
-        time_played: playerTimers[player.player_id] || 0,
+        time_played: latestStats?.[0]?.time_played || 0,
       };
-
+      
+      console.log('updatedPlayer', updatedPlayer);
       setActivePlayers((prev) => [...prev, updatedPlayer]);
-      setPlayerTimers((prev) => ({ ...prev, [player.player_id]: 0 }));
+      setPlayerTimers((prev) => ({ ...prev, [player.player_id]: latestStats?.[0]?.time_played || 0 }));
     } catch (err) {
       console.error("Error adding player:", err);
     }
@@ -91,7 +94,7 @@ const ActivePlayers = () => {
   const removePlayerFromActive = async (playerId: string, player: Player) => {
     setActivePlayers((prev) => prev.filter((p) => p.player_id !== playerId));
     setPlayerTimers((prev) => {
-      const { [player.id]: _, ...rest } = prev;
+      const { [playerId]: _, ...rest } = prev;
       return rest;
     });    
 
@@ -100,7 +103,7 @@ const ActivePlayers = () => {
       points: player.points,
       rebounds: player.rebounds,
       assists: player.assists,
-      time_played: playerTimers[player.id] || 0,
+      time_played: playerTimers[playerId] || 0,
     });
   };
 
@@ -132,7 +135,7 @@ const ActivePlayers = () => {
           <div key={player.id.toString()} className="relative bg-purple-500 text-white p-4 mb-4 rounded-lg">
             <h3>{player.player_name}</h3>
             <button onClick={() => removePlayerFromActive(player.player_id, player)}className="absolute top-4 right-4 bg-red-600 hover:bg-red-700 text-white font-bold px-2 py-1 rounded">X</button>
-            <div>Time on Court: {formatTime(playerTimers[player.id] || 0)}</div>
+            <div>Time on Court: {formatTime(playerTimers[player.player_id] || 0)}</div>
 
             <div className="grid grid-cols-3 gap-4 mt-2">
               {/* Points */}

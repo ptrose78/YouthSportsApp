@@ -584,6 +584,6 @@ export async function resetPlayerStats() {
 }
 
 export async function getLatestStats(player_id: string) {
-  const { data, error } = await supabase.from("players").select("points, rebounds, assists").eq("player_id", player_id).order("created_at", { ascending: false }).limit(1);
+  const { data, error } = await supabase.from("players").select("points, rebounds, assists, time_played").eq("player_id", player_id).order("created_at", { ascending: false }).limit(1);
   return data;
 }
