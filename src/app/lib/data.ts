@@ -32,6 +32,7 @@ interface Player {
   assists: number;
 }
 
+
 // Save a user to the users table and create a team and siteData entry
 export async function saveUser(email: string, team_name: string) {
   try {
@@ -219,28 +220,25 @@ export async function assignPlayersToGame(newPlayerName?: string, new_game_id?: 
 }
 
 // Create a new game and update the siteData table with the new game_id
-export async function createGame(opponent_name: string) {
+export async function createGame(opponent_name: string, game_length: number) {
   try {
     // Step 1: Get the team_id and user_id from the siteData table
     const { data: siteData, error: siteDataError } = await supabase
       .from("site-data")
       .select("id, team_id, user_id")
-      .single(); // Assuming there's only one row for the current user
+      .single();
 
     if (siteDataError) {
       console.error("Error fetching site data:", siteDataError.message);
       throw new Error(siteDataError.message);
     }
 
-    const id = siteData?.id;
-    const team_id = siteData?.team_id;
-    const user_id = siteData?.user_id;
+    const id = siteData.id;
+    const team_id = siteData.team_id;
 
     if (!team_id) {
       throw new Error("Team not found in site data.");
     }
-
-    console.log("Using team_id from siteData:", team_id);
 
     // Step 2: Insert the game into the games table
     const { data: gameData, error: gameError } = await supabase
@@ -251,6 +249,7 @@ export async function createGame(opponent_name: string) {
           created_at: new Date().toISOString(),
           team_id,
           opponent_name,
+          game_length
         },
       ])
       .select(); // This returns the inserted row(s)
@@ -426,6 +425,7 @@ export async function fetchPlayers() {
 }
 
 
+
 // Fetch site-data from site-data table
 export const getSiteData = async () => {
   const { data, error } = await supabase.from("site-data").select("*");
@@ -579,4 +579,9 @@ export async function resetPlayerStats() {
     console.error("Error in resetPlayerStats:", error);
     throw error;
   }
+}
+
+export async function getLatestStats(player_id: string) {
+  const { data, error } = await supabase.from("players").select("points, rebounds, assists").eq("player_id", player_id).order("created_at", { ascending: false }).limit(1);
+  return data;
 }

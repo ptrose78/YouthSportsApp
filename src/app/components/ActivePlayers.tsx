@@ -1,10 +1,17 @@
 "use client";
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useDrop } from "react-dnd";
 import { useAppDispatch } from "@/app/store/hooks";
-import { getPlayers } from "@/app/store/features/dataSlice";
-import { savePlayerStats } from "../lib/data";
-import { supabase } from "../lib/supabaseClient";
+import { getLatestStats, savePlayerStats } from "../lib/data";
+import { useSelector } from "react-redux";
+import { 
+  selectGameClock, 
+  selectIsGameRunning, 
+  startGameClock, 
+  stopGameClock, 
+  incrementGameClock 
+} from "../store/features/dataSlice"; 
 
 interface Player {
   id: string | number;
@@ -19,6 +26,10 @@ interface Player {
 const ActivePlayers = () => {
   const dispatch = useAppDispatch();
   const [activePlayers, setActivePlayers] = useState<Player[]>([]);
+  const [playerTimers, setPlayerTimers] = useState<Record<string, number>>({});
+
+  const gameClock = useSelector(selectGameClock);
+  const isGameRunning = useSelector(selectIsGameRunning);
 
   const [{ isOver }, dropRef] = useDrop<Player, void, { isOver: boolean }>({
     accept: "PLAYER",
@@ -34,91 +45,123 @@ const ActivePlayers = () => {
     }),
   });
 
+  useEffect(() => {
+    if (!isGameRunning) return;
+
+    const interval = setInterval(() => {
+      dispatch(incrementGameClock());
+      setPlayerTimers((prevTimers) =>
+        Object.fromEntries(
+          Object.entries(prevTimers).map(([playerId, time]) => [
+            playerId,
+            time + 1,
+          ])
+        )
+      );
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isGameRunning, dispatch]);
+
   const addPlayerToActive = async (player: Player) => {
-    if (activePlayers.find((p) => p.player_id === player.player_id)) {
-      return; // Prevent duplicate entries
-    }
-  
+    if (activePlayers.find((p) => p.player_id === player.player_id)) return;
+
     try {
-      // Fetch the latest stats from Supabase using player_id
-      const { data: latestStats, error } = await supabase
-        .from("players")
-        .select("points, rebounds, assists")
-        .eq("player_id", player.player_id)
-        .order("created_at", { ascending: false }) // Get the latest entry
-        .limit(1)
-        .single();
-  
-      if (error) {
-        console.error("Error fetching latest stats:", error.message);
-        return;
-      }
-  
-      // Merge the latest stats with the player object
+      const latestStats = await getLatestStats(player.player_id);
       const updatedPlayer = {
         ...player,
-        points: latestStats?.points || 0,
-        rebounds: latestStats?.rebounds || 0,
-        assists: latestStats?.assists || 0,
+        points: latestStats?.[0]?.points ?? 0,
+        rebounds: latestStats?.[0]?.rebounds ?? 0,
+        assists: latestStats?.[0]?.assists ?? 0,
       };
-  
-      // Add player to active list
+
       setActivePlayers((prev) => [...prev, updatedPlayer]);
+      setPlayerTimers((prev) => ({ ...prev, [player.id]: 0 }));
     } catch (err) {
-      console.error("Error adding player to active list:", err);
+      console.error("Error adding player:", err);
     }
   };
 
-  const updateStat = (playerId: string | number, stat: string, change: number) => {
-    setActivePlayers((prev) =>
-      prev.map((player) =>
-        player.id === playerId ? { ...player, [stat]: (player as any)[stat] + change } : player
-      )
-    );
-  };
+  const removePlayerFromActive = async (playerId: string, player: Player) => {
+    setActivePlayers((prev) => prev.filter((p) => p.player_id !== playerId));
+    setPlayerTimers((prev) => {
+      const { [player.id]: _, ...rest } = prev;
+      return rest;
+    });
 
-  async function removePlayer(playerId : string | number, player: Player) {
-    console.log("Player:", player);
-    setActivePlayers((prev) =>
-    prev.filter((player)=>player.id !== playerId)
-    )
-  
     await savePlayerStats(player.player_id, {
       points: player.points,
       rebounds: player.rebounds,
       assists: player.assists,
     });
-  }
+  };
+
+  const toggleGameClock = () => {
+    isGameRunning ? dispatch(stopGameClock()) : dispatch(startGameClock());
+  };
+
+  // 
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    return `${minutes}:${(seconds % 60).toString().padStart(2, "0")}`;
+  };
 
   return (
     <div
       ref={dropRef as unknown as React.RefObject<HTMLDivElement>}
-      className={`border-2 border-dashed p-4 rounded-lg min-h-[200px]
-         ${isOver ? "bg-gray-200" : "bg-white"}`}
+      className={`border-2 border-dashed p-4 rounded-lg min-h-[200px] ${
+        isOver ? "bg-gray-200" : "bg-white"
+      }`}
     >
       <h2 className="text-center text-lg font-bold mb-4">Active Players</h2>
+
+      {/* Game Clock Controls */}
+      <button
+        onClick={toggleGameClock}
+        className="mb-4 px-4 py-2 bg-blue-500 text-white rounded-lg"
+      >
+        {isGameRunning ? "Pause Game" : "Start Game"}
+      </button>
+
+      {/* Display Game Clock */}
+      <div className="text-center text-lg font-bold">
+        Game Clock: {formatTime(gameClock)}
+      </div>
+
+      {/* Active Players List */}
       <div className="list-none">
         {activePlayers.map((player) => (
-          <div
-            key={player.id}
-            className="bg-purple-500 text-white p-4 mb-4 rounded-lg shadow-md hover:shadow-lg transition-shadow"
-          >
-            <h3 className="text-xl font-bold mb-4">{player.player_name}</h3>
-            <button onClick={()=>removePlayer(player.id, player)}>x</button>
-            <div className="grid grid-cols-3 gap-4">
+          <div key={player.id.toString()} className="relative bg-purple-500 text-white p-4 mb-4 rounded-lg">
+            <h3>{player.player_name}</h3>
+            <button className="absolute top-4 right-4 bg-red-600 hover:bg-red-700 text-white font-bold px-2 py-1 rounded" onClick={() => removePlayerFromActive(player.player_id, player)}>X</button>
+            <div>Time on Court: {formatTime(playerTimers[player.id] || 0)}</div>
+
+            <div className="grid grid-cols-3 gap-4 mt-2">
               {/* Points */}
               <div className="flex flex-col items-center">
                 <div className="text-sm text-gray-100">Points</div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => updateStat(player.id, "points", 1)}
+                    onClick={() =>
+                      setActivePlayers((prev) =>
+                        prev.map((p) =>
+                          p.id === player.id ? { ...p, points: p.points + 1 } : p
+                        )
+                      )
+                    }
                     className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-2 py-1 rounded"
                   >
                     +
                   </button>
                   <span className="text-lg font-bold">{player.points}</span>
                   <button
-                    onClick={() => updateStat(player.id, "points", -1)}
+                    onClick={() =>
+                      setActivePlayers((prev) =>
+                        prev.map((p) =>
+                          p.id === player.id ? { ...p, points: Math.max(p.points - 1, 0) } : p
+                        )
+                      )
+                    }
                     className="bg-teal-500 hover:bg-teal-600 text-white font-semibold px-2 py-1 rounded"
                   >
                     -
@@ -131,14 +174,26 @@ const ActivePlayers = () => {
                 <div className="text-sm text-gray-100">Rebounds</div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => updateStat(player.id, "rebounds", 1)}
+                    onClick={() =>
+                      setActivePlayers((prev) =>
+                        prev.map((p) =>
+                          p.id === player.id ? { ...p, rebounds: p.rebounds + 1 } : p
+                        )
+                      )
+                    }
                     className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-2 py-1 rounded"
                   >
                     +
                   </button>
                   <span className="text-lg font-bold">{player.rebounds}</span>
                   <button
-                    onClick={() => updateStat(player.id, "rebounds", -1)}
+                    onClick={() =>
+                      setActivePlayers((prev) =>
+                        prev.map((p) =>
+                          p.id === player.id ? { ...p, rebounds: Math.max(p.rebounds - 1, 0) } : p
+                        )
+                      )
+                    }
                     className="bg-teal-500 hover:bg-teal-600 text-white font-semibold px-2 py-1 rounded"
                   >
                     -
@@ -151,14 +206,26 @@ const ActivePlayers = () => {
                 <div className="text-sm text-gray-100">Assists</div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => updateStat(player.id, "assists", 1)}
+                    onClick={() =>
+                      setActivePlayers((prev) =>
+                        prev.map((p) =>
+                          p.id === player.id ? { ...p, assists: p.assists + 1 } : p
+                        )
+                      )
+                    }
                     className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-2 py-1 rounded"
                   >
                     +
                   </button>
                   <span className="text-lg font-bold">{player.assists}</span>
                   <button
-                    onClick={() => updateStat(player.id, "assists", -1)}
+                    onClick={() =>
+                      setActivePlayers((prev) =>
+                        prev.map((p) =>
+                          p.id === player.id ? { ...p, assists: Math.max(p.assists - 1, 0) } : p
+                        )
+                      )
+                    }
                     className="bg-teal-500 hover:bg-teal-600 text-white font-semibold px-2 py-1 rounded"
                   >
                     -

@@ -1,5 +1,4 @@
-'use client';
-import useSetSiteData from '@/app/hooks/useSetSiteData';
+'use client'
 
 const saveUser = async (email: string, team_name: string) => {
   try {
@@ -19,8 +18,6 @@ const saveUser = async (email: string, team_name: string) => {
 };
 
 const UserForm = () => {
-
-  const setSiteData = useSetSiteData();
   
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -34,13 +31,13 @@ const UserForm = () => {
     const user = result.user;
     const team = result.team;
   
-    setSiteData({
-      user_id: user.id,
-      team_id: team.id,
-      dbOperation: "create"
-    });
 
-    e.currentTarget.reset();
+  // Ensure that the event target is a form element before calling reset
+  const form = e.target as HTMLFormElement;  // Type cast the target to a form element
+  
+  if (form) {
+    form.reset(); // Reset the form fields
+  }
   };
 
   return (

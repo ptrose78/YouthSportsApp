@@ -4,14 +4,14 @@ import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
     try {
-      const { opponent_name } = await request.json();
+      const { opponent_name, game_length } = await request.json();
       
       if (!opponent_name) {
         return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
       }
   
       // Step 1: Create the game
-      const game = await createGame(opponent_name);
+      const game = await createGame(opponent_name, game_length);
       console.log("game:", game);
       console.log("game[0].id:", game[0].id);
       // Step 2: Assign existing players to the new game
