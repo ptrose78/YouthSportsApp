@@ -1,48 +1,44 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
-import { selectCurrentGame } from "../store/features/dataSlice";
+import { useEffect } from "react";
 
-export default function Clock() {
-    const currentGame = useSelector(selectCurrentGame);
-    const gameLength = currentGame?.game_length ?? 1920; // Default to 32:00 minutes in seconds (32 * 60)
-
-    const [timeLeft, setTimeLeft] = useState(gameLength); // Track time in seconds
-    const [isRunning, setIsRunning] = useState(false);
-
-    useEffect(() => {
-        let timer: NodeJS.Timeout;
-        
-        if (isRunning && timeLeft > 0) {
-            timer = setInterval(() => {
-                setTimeLeft((prevTime: number) => Math.max(prevTime - 1, 0));
-            }, 1000);
-        } else if (timeLeft === 0) {
-            setIsRunning(false); // Stop when it reaches zero
-        }
-
-        return () => clearInterval(timer);
-    }, [isRunning, timeLeft]);
-
-    const formatTime = (seconds: number) => {
-        const minutes = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${minutes}:${secs.toString().padStart(2, "0")}`;
-    };
-
-    const handleStartPause = () => {
-        setIsRunning((prev) => !prev);
-    };
-
-    const handleReset = () => {
-        setIsRunning(false);
-        setTimeLeft(gameLength);
-    };
-
-    return (
-        <div>
-            
-        </div>
-    );
+interface ClockProps {
+  timeLeft: number;
+  isRunning: boolean;
+  onStartPause: () => void;
+  onReset: () => void;
 }
+
+const Clock = ({ timeLeft, isRunning, onStartPause, onReset }: ClockProps) => {
+  // Format the time in mm:ss format
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${minutes}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  return (
+    <div className="flex flex-col items-center mt-6">
+        <h1 className="text-4xl font-bold mb-2">Game Clock</h1>
+      <div className="text-6xl font-bold">{formatTime(timeLeft)}</div>
+      <div className="mt-4 flex gap-4">
+        <button
+          onClick={onStartPause}
+          className={`px-4 py-2 bg-blue-500 text-white rounded-lg ${
+            isRunning ? "bg-red-500" : "bg-green-500"
+          }`}
+        >
+          {isRunning ? "Pause" : "Start"}
+        </button>
+        <button
+          onClick={onReset}
+          className="px-4 py-2 bg-gray-500 text-white rounded-lg"
+        >
+          Reset
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default Clock;

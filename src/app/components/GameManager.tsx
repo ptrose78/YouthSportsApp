@@ -2,17 +2,25 @@
 
 import { useState, useEffect } from "react";
 import Clock from "@/app/components/Clock";
-import ActivePlayers from "@/app/components/ActivePlayers";
 import { useSelector } from "react-redux";
 import { selectCurrentGame } from "../store/features/dataSlice";
 
-
 export default function GameManager() {
     const currentGame = useSelector(selectCurrentGame);
-    const gameLength = currentGame?.game_length ?? 1920; // Default to 32:00 minutes in seconds (32 * 60)
+    
+    let gameLength = 0;
+    console.log(currentGame);
+    
 
-    const [timeLeft, setTimeLeft] = useState(gameLength); // Track time in seconds
-    const [isRunning, setIsRunning] = useState(false);
+    const [timeLeft, setTimeLeft] = useState<number>(gameLength); // Track time in seconds
+    const [isRunning, setIsRunning] = useState<boolean>(false);
+
+    useEffect(()=> {
+        if (currentGame) {
+            gameLength = currentGame[0].game_length * 60 || 1920;
+            setTimeLeft(gameLength);
+        }
+    },[currentGame])
 
     useEffect(() => {
         let timer: NodeJS.Timeout;
@@ -34,18 +42,17 @@ export default function GameManager() {
 
     const handleReset = () => {
         setIsRunning(false);
-        setTimeLeft(1920);
+        setTimeLeft(gameLength);
     };
 
     return (
         <div>
             <Clock 
-                timeLeft={timeLeft.toString()} 
+                timeLeft={timeLeft} 
                 isRunning={isRunning} 
                 onStartPause={handleStartPause} 
                 onReset={handleReset} 
             />
-            <ActivePlayers players={[]} isRunning={isRunning} />
         </div>
     );
 }

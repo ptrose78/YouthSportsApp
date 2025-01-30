@@ -12,6 +12,7 @@ import {
   stopGameClock, 
   incrementGameClock 
 } from "../store/features/dataSlice"; 
+import GameManager from "@/app/components/GameManager";
 
 interface Player {
   id: string | number;
@@ -123,18 +124,7 @@ const ActivePlayers = () => {
     >
       <h1 className="text-center text-2xl font-bold mb-4">Active Players</h1>
 
-      {/* Game Clock Controls */}
-      <button
-        onClick={toggleGameClock}
-        className="mb-4 px-4 py-2 bg-blue-500 text-white rounded-lg mx-auto block"
-      >
-        {isGameRunning ? "Pause Game" : "Start Game"}
-      </button>
-
-      {/* Display Game Clock */}
-      <div className="text-center text-lg font-bold">
-        Game Clock: {formatTime(gameClock)}
-      </div>
+      
 
       {/* Active Players List */}
       <div className="list-none">

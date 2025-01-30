@@ -17,10 +17,10 @@ const GameForm = () => {
       if (!response.ok) throw new Error("Failed to save game information.");
 
       const data = await response.json();
-      console.log("Game saved successfully:", data);
+      console.log("Game saved successfully:", data.game);
 
       // Dispatch the game to Redux
-      dispatch(setCurrentGame(data));
+      dispatch(setCurrentGame(data.game));
 
     } catch (error) {
       console.error("Error adding game:", error);
