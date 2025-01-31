@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
-
 interface ClockProps {
   timeLeft: number;
   isRunning: boolean;
@@ -17,6 +15,7 @@ const Clock = ({ timeLeft, isRunning, onStartPause, onReset }: ClockProps) => {
     return `${minutes}:${secs.toString().padStart(2, "0")}`;
   };
 
+  // Render
   return (
     <div className="flex flex-col items-center mt-6">
         <h1 className="text-4xl font-bold mb-2">Game Clock</h1>

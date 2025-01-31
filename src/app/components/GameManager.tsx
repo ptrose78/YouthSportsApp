@@ -1,52 +1,51 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import Clock from "@/app/components/Clock";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import {
     selectCurrentGame,
-    selectGameClock,
+    selectTimeLeft,
     selectIsGameRunning,
     startGameClock,
     stopGameClock,
     resetGameClock,
     incrementGameClock,
+    decrementTimeLeft, 
+    setTimeLeft,       
 } from "../store/features/dataSlice";
-import { useAppDispatch } from "@/app/store/hooks"; // Add your dispatch import
+import { useAppDispatch } from "@/app/store/hooks"; 
 
 export default function GameManager() {
     const dispatch = useAppDispatch();
+
+    // Global state
     const currentGame = useSelector(selectCurrentGame);
-    const gameClock = useSelector(selectGameClock);
+    const timeLeft = useSelector(selectTimeLeft);
     const isGameRunning = useSelector(selectIsGameRunning);
 
-    let gameLength = 0;
-    if (currentGame) {
-        gameLength = currentGame[0].game_length * 60 || 1920;
-    }
-
-    const [timeLeft, setTimeLeft] = useState<number>(gameLength); // Track time in seconds
-
-    useEffect(()=> {
+    // Set time left
+    useEffect(() => {
         if (currentGame) {
-            gameLength = currentGame[0].game_length * 60 || 1920;
-            setTimeLeft(gameLength);
+            const gameLength = currentGame[0].game_length * 60 || 1920; 
+            dispatch(setTimeLeft(gameLength)); 
         }
-    },[currentGame])
+    }, [currentGame, dispatch]);
 
+    // Start/pause game clock
     useEffect(() => {
         let timer: NodeJS.Timeout;
 
         if (isGameRunning && timeLeft > 0) {
             timer = setInterval(() => {
-                setTimeLeft((prevTime: number) => Math.max(prevTime - 1, 0));
-                dispatch(incrementGameClock()); // Update global game clock in Redux store
+                dispatch(decrementTimeLeft()); 
+                dispatch(incrementGameClock()); 
             }, 1000);
         } else if (timeLeft === 0) {
-            dispatch(stopGameClock()); // Stop the game when time is up
+            dispatch(stopGameClock()); 
         }
 
-        return () => clearInterval(timer); // Cleanup on unmount or when timer stops
+        return () => clearInterval(timer);
     }, [isGameRunning, timeLeft, dispatch]);
 
     const handleStartPause = () => {
@@ -58,11 +57,12 @@ export default function GameManager() {
     };
 
     const handleReset = () => {
-        gameLength = currentGame[0].game_length * 60 || 1920;
-        setTimeLeft(gameLength);
-        dispatch(resetGameClock()); // Reset game clock in Redux store
+        const gameLength = currentGame[0].game_length * 60 || 1920;
+        dispatch(setTimeLeft(gameLength)); 
+        dispatch(resetGameClock()); 
     };
 
+    // Render
     return (
         <div>
             <Clock timeLeft={timeLeft} isRunning={isGameRunning} onStartPause={handleStartPause} onReset={handleReset} />
