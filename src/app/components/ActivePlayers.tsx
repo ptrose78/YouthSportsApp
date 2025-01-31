@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useDrop } from "react-dnd";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
-import { getLatestStats, savePlayerStats } from "../lib/data";
+import { getPlayerStats, postPlayerStats } from "../lib/data";
 import {
   selectActivePlayers,
   selectTimeLeft,
@@ -49,7 +49,7 @@ export default function ActivePlayers() {
     if (activePlayers.find((p) => p.player_id === player.player_id)) return;
 
     try {
-      const latestStats = await getLatestStats(player.player_id);
+      const latestStats = await getPlayerStats(player.player_id);
       const updatedPlayer = {
         ...player,
         points: latestStats?.[0]?.points ?? 0,
@@ -68,7 +68,7 @@ export default function ActivePlayers() {
   const removePlayerFromActive = async (playerId: string, player: Player) => {
     
     // Save player stats to database
-    await savePlayerStats(player.player_id, {
+    await postPlayerStats(player.player_id, {
       points: player.points,
       rebounds: player.rebounds,
       assists: player.assists,
@@ -84,7 +84,7 @@ export default function ActivePlayers() {
     if (timeLeft === 0) {
       activePlayers.forEach(async (player) => {
         try {
-          await savePlayerStats(player.player_id, {
+          await postPlayerStats(player.player_id, {
             points: player.points,
             rebounds: player.rebounds,
             assists: player.assists,

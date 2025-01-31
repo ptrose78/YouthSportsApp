@@ -1,4 +1,3 @@
-'use client';
 
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { fetchUsers, fetchTeams, fetchGames, fetchPlayers } from "@/app/lib/data";

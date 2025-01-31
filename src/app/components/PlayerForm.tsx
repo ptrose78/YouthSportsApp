@@ -6,7 +6,7 @@ import { getPlayers } from "@/app/store/features/dataSlice";
 
 const savePlayerToRoster = async (player_name: string) => {
   try {
-    const response = await fetch("/api/player", {
+    const response = await fetch("/api/createPlayer", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ player_name }),

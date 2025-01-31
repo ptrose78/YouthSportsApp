@@ -116,8 +116,8 @@ export async function saveUser(email: string, team_name: string) {
   }
 }
 
-// Function to assign players (existing and new) to a game
-export async function assignPlayersToGame(newPlayerName?: string, new_game_id?: string) {
+// Function to create players (existing from roster and new) for a new game
+export async function createPlayer(newPlayerName?: string, new_game_id?: string) {
   try {
     let existingPlayerEntries: any[] = [];
     console.log("newPlayerName:", newPlayerName);
@@ -425,7 +425,15 @@ export async function fetchPlayers() {
   return data;
 }
 
-
+export async function fetchPlayersByGame(game_id: string) {
+  const { data, error } = await supabase.from("players").select("*").eq("game_id", game_id);
+  console.log("data:",data)
+  if (error) {
+    console.error("Error fetching roster:", error.message);
+    throw new Error(error.message);
+  }
+  return data;
+}
 
 // Fetch site-data from site-data table
 export const getSiteData = async () => {
@@ -516,7 +524,7 @@ export async function createSiteData(user_id?: string, team_id?: string, game_id
 
 
 
-export async function savePlayerStats(player_id: string | number, stats: PlayerStats) {
+export async function postPlayerStats(player_id: string | number, stats: PlayerStats) {
   const { points, rebounds, assists, time_played } = stats;
   console.log(stats)
   
@@ -583,7 +591,7 @@ export async function resetPlayerStats() {
   }
 }
 
-export async function getLatestStats(player_id: string) {
+export async function getPlayerStats(player_id: string) {
   const { data, error } = await supabase.from("players").select("points, rebounds, assists, time_played").eq("player_id", player_id).order("created_at", { ascending: false }).limit(1);
   return data;
 }

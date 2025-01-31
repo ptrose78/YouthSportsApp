@@ -1,6 +1,6 @@
 'use client'
 
-import { setCurrentGame } from '@/app/store/features/dataSlice';
+import { setCurrentGame, getGames } from '@/app/store/features/dataSlice';
 import { useDispatch } from 'react-redux';
 
 const GameForm = () => {
@@ -8,7 +8,7 @@ const GameForm = () => {
 
   const saveGame = async (opponent_name: string, game_length: number) => {
     try {
-      const response = await fetch("/api/game", {
+      const response = await fetch("/api/createGame", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ opponent_name, game_length }),
@@ -17,10 +17,15 @@ const GameForm = () => {
       if (!response.ok) throw new Error("Failed to save game information.");
 
       const data = await response.json();
-      console.log("Game saved successfully:", data.game);
+
+      if (data.refresh) {
+        dispatch(getGames() as any); // Re-fetch the games
+        console.log("Games fetched successfully:", data.games);
+      }
 
       // Dispatch the game to Redux
       dispatch(setCurrentGame(data.game));
+
 
     } catch (error) {
       console.error("Error adding game:", error);

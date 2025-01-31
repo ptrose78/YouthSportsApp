@@ -1,7 +1,10 @@
 // app/api/stats/route.ts
 
 import { NextResponse } from "next/server";
-import { savePlayerStats } from "@/app/lib/data"; // Import data.ts functions
+import { postPlayerStats } from "@/app/lib/data"; // Import data.ts functions
+
+// Note: This is not used in the app, instead the ActivePlayers component 
+// uses the postPlayerStats function to save stats for a player
 
 // Handle POST requests to save stats
 export async function POST(request: Request) {
@@ -14,9 +17,10 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await savePlayerStats(playerId, stats);
+    const result = await postPlayerStats(playerId, stats);
     return NextResponse.json({ message: "Stats saved!", result }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: (error as Error).message }, { status: 500 });
   }
+
 }
