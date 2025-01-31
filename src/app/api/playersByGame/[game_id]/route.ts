@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from 'next/server';
 import { fetchPlayersByGame } from "@/app/lib/data";  // Your function to fetch players by game
 
-export async function GET(request: Request, { params }: { params: { game_id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: { game_id: string } }) {
   const { game_id } = params;
 
   console.log("game_id:", game_id); // This will output the value of the dynamic parameter

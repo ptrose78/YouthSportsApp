@@ -60,8 +60,13 @@ export default function GameStats() {
           </thead>
 
           <tbody>
-            {playerDetails.length > 0 ? (
-              playerDetails.map((player) => (
+            {Array.isArray(playerDetails) && playerDetails.length > 0 ? (
+              playerDetails.map((player: {
+                id: string;
+                player_name: string;
+                time_played: number;
+                points: number;
+              }) => (
                 <tr key={player.id} className="text-sm text-gray-700 border-b hover:bg-blue-50">
                   <td className="px-4 py-2 text-center font-semibold">{player.player_name}</td>
                   <td className="px-4 py-2 text-center">{formatTime(player.time_played)}</td>
