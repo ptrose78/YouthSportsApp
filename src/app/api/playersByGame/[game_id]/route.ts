@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { fetchPlayersByGame } from "@/app/lib/data";  // Your function to fetch players by game
 
-export async function GET(req: NextRequest, { params }: { params: { game_id: string } }) {
-  const { game_id } = params;
+import { fetchPlayersByGame } from "@/app/lib/data"; 
+import { NextResponse, NextRequest } from 'next/server';
 
-  console.log("game_id:", game_id); // This will output the value of the dynamic parameter
+export async function GET(request: NextRequest, context) { 
+  const game_id = context.params.game_id; // Access params directly
 
+  console.log("game_id:", game_id); 
 
   if (!game_id) {
     return NextResponse.json({ error: "Game ID is required" }, { status: 400 });

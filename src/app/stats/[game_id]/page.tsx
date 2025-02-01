@@ -66,8 +66,11 @@ export default function GameStats() {
                 player_name: string;
                 time_played: number;
                 points: number;
+                rebounds: number;
+                assists: number;
               }) => (
                 <tr key={player.id} className="text-sm text-gray-700 border-b hover:bg-blue-50">
+
                   <td className="px-4 py-2 text-center font-semibold">{player.player_name}</td>
                   <td className="px-4 py-2 text-center">{formatTime(player.time_played)}</td>
                   <td className="px-4 py-2 text-center">{player.points}</td>
@@ -77,7 +80,7 @@ export default function GameStats() {
               ))
             ) : (
               <tr>
-                <td colSpan="5" className="px-4 py-2 text-center text-gray-500">No player stats available for this game.</td>
+                <td colSpan={5} className="px-4 py-2 text-center text-gray-500">No player stats available for this game.</td>
               </tr>
             )}
           </tbody>
