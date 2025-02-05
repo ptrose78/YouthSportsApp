@@ -22,10 +22,13 @@ export default function PlayersList() {
     if (selectedGameId) {
       const fetchGameDetails = async () => {
         try {
-          const response = await fetch(`/api/playersByGame/${selectedGameId}`);
+          console.log('selectedGameId', selectedGameId)
+          const response = await fetch(`/api/playersStatsByGame/${selectedGameId}`);
           if (response.ok) {
             const data = await response.json();
+            console.log(data)
             setPlayerDetails(data);
+
           } else {
             console.error('Failed to fetch game details:', response.statusText);
           }

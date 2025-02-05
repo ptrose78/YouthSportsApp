@@ -5,7 +5,7 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { useDrag } from "react-dnd";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
-import { getPlayers } from "../store/features/dataSlice";
+import { getPlayers, deletePlayer } from "../store/features/dataSlice";
 
 interface Player {
   id: string | number;
@@ -16,9 +16,12 @@ interface Player {
   rebounds: number;
   assists: number;
   time_played: number;
+  player_id: string;
 }
 
+
 const DraggablePlayer = ({ player }: { player: Player }) => {
+  const dispatch = useAppDispatch();
   const [{ isDragging }, dragRef] = useDrag(() => ({
     type: "PLAYER",
     item: player,
@@ -27,17 +30,40 @@ const DraggablePlayer = ({ player }: { player: Player }) => {
     }),
   }));
 
+  const handleDelete = async (player: Player) => {
+    await dispatch(deletePlayer(player.player_id));
+    console.log("Player deleted");
+
+    const response = await fetch("/api/deletePlayer", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ player_id: player.player_id }),
+    });
+    console.log("Response:", response);
+
+    if (!response.ok) {
+      console.error("Failed to delete player");
+    }
+
+    dispatch(getPlayers());
+  };
+
   return (
-    <li
+    <li 
       ref={dragRef as unknown as React.RefObject<HTMLLIElement>}
+
       className={`${
         isDragging ? 'bg-gray-300' : 'bg-blue-500'
       } text-white p-4 rounded-lg text-center font-bold text-xl cursor-grab shadow-lg ${
         isDragging ? 'transform scale-105 shadow-xl' : 'shadow-sm'
-      } transition-transform transition-shadow my-2`}
+      } transition-transform transition-shadow my-2 relative`} 
+
     >
       {player.player_name}
+      <button className="absolute top-1 right-2 text-red-500" onClick={() => handleDelete(player)}>X</button>
+
     </li>
+
   );
 };
 
@@ -54,11 +80,12 @@ const Players = () => {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="p-4 bg-gray-100 rounded-lg">
+      <div className="p-4 rounded-lg border-b border-gray-300">
         <h2 className="text-center mb-4 text-2xl font-semibold">Roster</h2>
-        <ul className="list-none p-0">
+        <ul className="list-none p-0 ">
+
           {players.map((player) => (
-            <DraggablePlayer 
+              <DraggablePlayer 
               key={player.id} 
               player={player} 
             />

@@ -17,7 +17,7 @@ const Clock = ({ timeLeft, isRunning, onStartPause, onReset }: ClockProps) => {
 
   // Render
   return (
-    <div className="flex flex-col items-center mt-6">
+    <div className="flex flex-col items-center mt-16">
         <h1 className="text-4xl font-bold mb-2">Game Clock</h1>
       <div className="text-6xl font-bold">{formatTime(timeLeft)}</div>
       <div className="mt-4 flex gap-4">

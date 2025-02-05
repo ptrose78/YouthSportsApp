@@ -46,10 +46,10 @@ const GameForm = () => {
   };
 
   return (
-    <div className="flex justify-center items-center bg-gray-100">
+    <div className="flex justify-center items-center mb-4">
       <form 
         onSubmit={handleSubmit} 
-        className="bg-white shadow-lg rounded-lg p-6 w-full max-w-md"
+        className="rounded-lg p-6 w-full max-w-md"
       >
         <h2 className="text-2xl font-bold text-center text-gray-700 mb-4">Add New Game</h2>
 

@@ -110,9 +110,13 @@ const dataSlice = createSlice({
     removePlayerFromGlobalActive: (state, action) => {
       state.activePlayers = state.activePlayers.filter((player) => player.id !== action.payload.id);
     },
+    deletePlayer: (state, action) => {
+      state.players = state.players.filter((player) => player.id !== action.payload.id);
+    },
   },
   extraReducers: (builder) => {
     builder
+
       .addCase(getUsers.fulfilled, (state, action) => {
         state.users = action.payload;
       })
@@ -138,7 +142,8 @@ export const {
   decrementTimeLeft,
   setTimeLeft,
   addPlayerToGlobalActive,
-  removePlayerFromGlobalActive
+  removePlayerFromGlobalActive,
+  deletePlayer
 } = dataSlice.actions;
 
 export const selectCurrentGame = (state: { data: DataState }) => state.data.currentGame;

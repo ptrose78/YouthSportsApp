@@ -207,10 +207,17 @@ export async function createPlayer(newPlayerName?: string, new_game_id?: string)
 
     // Step 8: Insert new records into the database
     const { error: insertError } = await supabase.from("players").insert(existingPlayerEntries);
+    const { error: insertErrorStats } = await supabase.from("players-stats").insert(existingPlayerEntries);
+
 
     if (insertError) {
       console.error("Error inserting new players:", insertError.message);
       throw new Error(insertError.message);
+    }
+
+    if (insertErrorStats) {
+      console.error("Error inserting new players stats:", insertErrorStats.message);
+      throw new Error(insertErrorStats.message);
     }
 
     return { message: "Players assigned to game!", players: existingPlayerEntries };
@@ -220,13 +227,34 @@ export async function createPlayer(newPlayerName?: string, new_game_id?: string)
   }
 }
 
+// Delete a player from the players table
+export async function deletePlayer(player_id: string) {
+
+  console.log("Deleting player:", player_id);
+  try {
+    const { data, error } = await supabase.from("players").delete().eq("player_id", player_id);
+    console.log("Data:", data);
+    return data;
+  } catch (error) {
+
+
+    console.error("Error deleting player:", error);
+    throw error;
+    
+  }
+  
+}
+
+
+
+
 // Create a new game and update the siteData table with the new game_id
 export async function createGame(opponent_name: string, game_length: number) {
   try {
     // Step 1: Get the team_id and user_id from the siteData table
     const { data: siteData, error: siteDataError } = await supabase
       .from("site-data")
-      .select("id, team_id, user_id")
+      .select("id, team_id, email")
       .single();
 
     if (siteDataError) {
@@ -234,7 +262,7 @@ export async function createGame(opponent_name: string, game_length: number) {
       throw new Error(siteDataError.message);
     }
 
-    const id = siteData.id;
+    const email = siteData.email;
     const team_id = siteData.team_id;
 
     if (!team_id) {
@@ -269,7 +297,7 @@ export async function createGame(opponent_name: string, game_length: number) {
     const { data: updatedSiteData, error: updateSiteDataError } = await supabase
       .from("site-data")
       .update({ game_id: game_id }) // Only update the game_id
-      .eq("id", id); // Match the siteData row by its ID
+      .eq("email", email); // Match the siteData row by its ID
 
     if (updateSiteDataError) {
       console.error("Error updating site data:", updateSiteDataError.message);
@@ -364,10 +392,26 @@ export async function getGameId() {
 
 
 
+// Fetch user by email
+export async function getUser(email: string) {
+  
+  const { data: existingUser, error: existingUserError } = await supabase
+      .from("users")
+      .select("*")
+      .eq("email", email);
+
+      if (existingUserError) {
+        console.error("Error fetching user:", existingUserError.message);
+        throw new Error(existingUserError.message);
+      }
+  return existingUser;
+}
+  
+
 // Fetch all users
 export async function fetchUsers() {
   const { data, error } = await supabase.from("users").select("*");
-  console.log(data);
+
   if (error) {
     console.error("Error fetching roster:", error.message);
     throw new Error(error.message);
@@ -377,6 +421,7 @@ export async function fetchUsers() {
 
 // Fetch all teams
 export async function fetchTeams() {
+
   const { data, error } = await supabase.from("teams").select("*");
   console.log(data);
   if (error) {
@@ -425,8 +470,8 @@ export async function fetchPlayers() {
   return data;
 }
 
-export async function fetchPlayersByGame(game_id: string) {
-  const { data, error } = await supabase.from("players").select("*").eq("game_id", game_id);
+export async function fetchPlayersStatsByGame(game_id: string) {
+  const { data, error } = await supabase.from("players-stats").select("*").eq("game_id", game_id);
   console.log("data:",data)
   if (error) {
     console.error("Error fetching roster:", error.message);
@@ -434,6 +479,7 @@ export async function fetchPlayersByGame(game_id: string) {
   }
   return data;
 }
+
 
 // Fetch site-data from site-data table
 export const getSiteData = async () => {
@@ -522,8 +568,6 @@ export async function createSiteData(user_id?: string, team_id?: string, game_id
 
 
 
-
-
 export async function postPlayerStats(player_id: string | number, stats: PlayerStats) {
   const { points, rebounds, assists, time_played } = stats;
   console.log(stats)
@@ -542,7 +586,7 @@ export async function postPlayerStats(player_id: string | number, stats: PlayerS
 
 
   const { data, error } = await supabase
-    .from("players")
+    .from("players-stats")
     .update({
       points,
       rebounds,
@@ -592,6 +636,58 @@ export async function resetPlayerStats() {
 }
 
 export async function getPlayerStats(player_id: string) {
-  const { data, error } = await supabase.from("players").select("points, rebounds, assists, time_played").eq("player_id", player_id).order("created_at", { ascending: false }).limit(1);
+  const { data, error } = await supabase.from("players-stats").select("points, rebounds, assists, time_played").eq("player_id", player_id).order("created_at", { ascending: false }).limit(1);
   return data;
+}
+
+
+//email
+const TABLE_NAME = "email-logs";  // Table name
+
+export async function getEmailLogs() {
+  const { data, error } = await supabase
+    .from(TABLE_NAME)
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error(error);
+    return [];
+  }
+
+  return data;
+}
+
+export async function saveEmailLog({
+  recipients,
+  message,
+  created_at,
+  subject,
+  sender,
+}: {
+  recipients: string[];
+  message: string;
+  created_at: string;
+  subject: string;
+  sender: string;
+}) {
+  try {
+    const { error } = await supabase.from(TABLE_NAME).insert([
+      {
+        recipients, 
+        message,
+        created_at,
+        subject,
+        sender,
+      },
+    ]);
+
+    if (error) {
+      console.error("Error saving email log:", error);
+      throw new Error("Failed to save email log.");
+    }
+  } catch (error) {
+    console.error("Unexpected error saving email log:", error);
+    throw new Error("Failed to save email log.");
+  }
 }
