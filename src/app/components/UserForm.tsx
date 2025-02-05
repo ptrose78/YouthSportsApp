@@ -83,7 +83,7 @@ const UserForm = () => {
         form.reset();
       }
       alert("User registered successfully!");
-      router.push('/dashboard');
+      router.push('/scoreboard');
     } catch (error) {
       console.error("Error in handleSubmit:", error);
       setIsLoading(false); // Reset loading state even on error

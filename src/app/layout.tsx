@@ -16,7 +16,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         {/* ClientLayout wraps the client-side logic */}
         <ClientLayout>
-          <NavBar />
           {children}
         </ClientLayout>
       </body>
