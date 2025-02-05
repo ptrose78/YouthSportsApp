@@ -24,7 +24,7 @@ export default function Home() {
             <Players />
             <PlayerForm />
           </div>
-          <div className="flex-1 bg-green-100">
+          <div className="flex-1">
             <ActivePlayers />
           </div>
         </div>

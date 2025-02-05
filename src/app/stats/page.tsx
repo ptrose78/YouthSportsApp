@@ -2,12 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/app/store/hooks';
-import { getGames } from '../store/features/dataSlice';
+import { getGames, getTeams } from '../store/features/dataSlice';
+import { selectTeams } from '../store/features/dataSlice';
 import Link from 'next/link';
 
 export default function PlayersList() {
   const dispatch = useAppDispatch();
-  const { games, loading, error } = useAppSelector((state) => state.data);
+  const { games, loading: gamesLoading, error: gamesError } = useAppSelector((state) => state.data);
+  const { teams, loading: teamsLoading, error: teamsError } = useAppSelector((state) => state.data);
+  
 
   const [selectedGameId, setSelectedGameId] = useState(null); // To track the selected game
   const [playerDetails, setPlayerDetails] = useState(null); // To store player stats for the selected game
@@ -15,7 +18,9 @@ export default function PlayersList() {
 
   useEffect(() => {
     dispatch(getGames()); // Fetch games when component mounts
+    dispatch(getTeams());
   }, [dispatch]);
+
 
   useEffect(() => {
     // Fetch game stats if a game is selected
@@ -58,8 +63,9 @@ export default function PlayersList() {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  if (loading) return <p>Loading games...</p>;
-  if (error) return <p>Error: {error}</p>;
+  if (gamesLoading || teamsLoading) return <p>Loading games...</p>;
+  if (gamesError || teamsError) return <p>Error: {gamesError || teamsError}</p>;
+
 
   return (
     <div className="container mx-auto p-4">
@@ -72,7 +78,7 @@ export default function PlayersList() {
             onClick={() => setSelectedGameId(game.id)} // Set the selected game ID on click
             className="mb-2 p-2 cursor-pointer hover:bg-gray-200"
           >
-            {game.opponent_name} {formatDateandTime(game.created_at)}
+            {game.opponent_name} - {formatDateandTime(game.created_at)}
           </li>
         ))}
       </ul>
@@ -80,7 +86,7 @@ export default function PlayersList() {
       {selectedGameId && playerDetails ? (
         <div className="overflow-x-auto mt-8">
           <h2 className="text-3xl font-bold text-center text-indigo-600 mb-6">
-            Box Score for Game vs. {selectedOpponentName}
+            Box Score for { teams[0].team_name } vs. {selectedOpponentName}
           </h2>
           <table className="min-w-full table-auto bg-white border border-gray-300 shadow-md rounded-lg">
             <thead>

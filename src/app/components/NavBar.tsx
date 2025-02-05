@@ -10,7 +10,7 @@ export default function NavBar() {
       <div className="container mx-auto flex justify-between items-center">
         <div>
           <Link href="/scoreboard" className="text-white font-bold text-xl">
-            GameTime
+            Hoopz Tracker
           </Link>
         </div>
 

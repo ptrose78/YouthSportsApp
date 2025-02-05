@@ -51,10 +51,10 @@ const GameForm = () => {
         onSubmit={handleSubmit} 
         className="rounded-lg p-6 w-full max-w-md"
       >
-        <h2 className="text-2xl font-bold text-center text-gray-700 mb-4">Add New Game</h2>
+        <h2 className="text-3xl font-bold text-center text-gray-700 mb-4">Add New Game</h2>
 
         <div className="mb-4">
-          <label className="block text-gray-600 text-sm mb-1">Opponent Name</label>
+          
           <input 
             type="text" 
             name="opponent_name" 
@@ -65,11 +65,11 @@ const GameForm = () => {
         </div>
 
         <div className="mb-4">
-          <label className="block text-gray-600 text-sm mb-1">Game Length (Minutes)</label>
+          
           <input 
             type="number" 
             name="game_length" 
-            placeholder="Enter game length" 
+            placeholder="Enter game length in minutes" 
             required
             className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
           />

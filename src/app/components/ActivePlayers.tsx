@@ -117,7 +117,7 @@ export default function ActivePlayers() {
         isOver ? "bg-gray-200" : "bg-white"
       }`}
     >
-      <h1 className="text-center text-2xl font-bold mb-4">Active Players</h1>
+      <h1 className="text-center text-3xl font-bold mb-4 text-gray-700">Active Players</h1>
 
       <div className="list-none">
         {activePlayers.map((player) => {
@@ -126,14 +126,15 @@ export default function ActivePlayers() {
               key={player.id.toString()}
               className="relative bg-purple-500 text-white p-4 mb-4 rounded-lg"
             >
-              <h3>{player.player_name}</h3>
+              <h3 className="text-2xl font-bold mb-2">{player.player_name}</h3>
               <button
                 onClick={() => removePlayerFromActive(player.player_id, player)}
                 className="absolute top-4 right-4 bg-red-600 hover:bg-red-700 text-white font-bold px-2 py-1 rounded"
+
               >
                 X
               </button>
-              <div>Time on Court: {formatTime(player.time_played)}</div>
+              <div>Time on Court: <span className="text-lg font-bold">{formatTime(player.time_played)}</span></div>
 
               <div className="grid grid-cols-3 gap-4 mt-2">
                 {/* Points */}
@@ -200,6 +201,8 @@ export default function ActivePlayers() {
           );
         })}
       </div>
+      <h2 className="text-center text-lg mb-4">Drop a player here to add them to the game</h2>
     </div>
+
   );
 }

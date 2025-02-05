@@ -53,14 +53,15 @@ const DraggablePlayer = ({ player }: { player: Player }) => {
       ref={dragRef as unknown as React.RefObject<HTMLLIElement>}
 
       className={`${
-        isDragging ? 'bg-gray-300' : 'bg-blue-500'
+        isDragging ? 'bg-gray-300' : 'bg-red-500'
       } text-white p-4 rounded-lg text-center font-bold text-xl cursor-grab shadow-lg ${
         isDragging ? 'transform scale-105 shadow-xl' : 'shadow-sm'
       } transition-transform transition-shadow my-2 relative`} 
 
     >
       {player.player_name}
-      <button className="absolute top-1 right-2 text-red-500" onClick={() => handleDelete(player)}>X</button>
+      <button className="absolute top-1 right-2 text-black-900" onClick={() => handleDelete(player)}>X</button>
+
 
     </li>
 
@@ -81,7 +82,7 @@ const Players = () => {
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="p-4 rounded-lg border-b border-gray-300">
-        <h2 className="text-center mb-4 text-2xl font-semibold">Roster</h2>
+        <h2 className="text-center mb-4 text-3xl font-bold text-gray-700">Roster</h2>
         <ul className="list-none p-0 ">
 
           {players.map((player) => (

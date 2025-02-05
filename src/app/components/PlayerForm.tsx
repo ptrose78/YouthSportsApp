@@ -47,10 +47,9 @@ const PlayerForm = () => {
         onSubmit={handleSubmit} 
         className="rounded-lg p-6 w-full max-w-md"
       >
-        <h2 className="text-2xl font-bold text-center text-gray-700 mb-4">Add New Player</h2>
+        <h2 className="text-3xl font-bold text-center text-gray-700 mb-4">Add New Player</h2>
 
         <div className="mb-4">
-          <label className="block text-gray-600 text-sm mb-1">Player Name</label>
           <input
             type="text"
             value={playerName}
@@ -63,7 +62,7 @@ const PlayerForm = () => {
 
         <button 
           type="submit" 
-          className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 rounded-lg transition duration-300"
+          className="w-full bg-blue-500 hover:bg-green-600 text-white font-semibold py-2 rounded-lg transition duration-300"
         >
           Add Player
         </button>
