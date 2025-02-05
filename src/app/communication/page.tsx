@@ -74,7 +74,7 @@ const MyRestrictedComponent = () => {
         },
         body: JSON.stringify({
           userEmail: user.primaryEmailAddress.emailAddress,
-          productId: 'price_1Qp04h4RUzFrzsGP5kH3y1Eo', // Stripe Price ID
+          productId: 'prod_RijU7HzOFY3X75', // Stripe Price ID
         }),
       });    
       console.log("response", response);
