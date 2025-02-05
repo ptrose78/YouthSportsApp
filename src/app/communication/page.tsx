@@ -74,12 +74,13 @@ const MyRestrictedComponent = () => {
         },
         body: JSON.stringify({
           userEmail: user.primaryEmailAddress.emailAddress,
-          productId: 'prod_RijU7HzOFY3X75', // Stripe Price ID
+          productId: 'price_1QpI1wGM8GtOeckX7MXADWFp', // Stripe Price ID
         }),
       });    
       console.log("response", response);
       const data = await response.json();
       console.log('Stripe API response:', data); // Log response
+      console.log("data.sessionId", data.sessionId);
   
       if (data.sessionId) {
         console.log("data.sessionId", data.sessionId);
