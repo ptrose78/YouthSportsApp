@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useAppDispatch } from "@/app/store/hooks";
 import { getPlayers } from "@/app/store/features/dataSlice";
+import { useUser } from "@clerk/nextjs";
 
 const savePlayerToRoster = async (player_name: string) => {
   try {
@@ -54,7 +55,7 @@ const PlayerForm = () => {
             type="text"
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value)}
-            placeholder="Enter player name"
+            placeholder="Enter name"
             required
             className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
           />

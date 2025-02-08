@@ -1,27 +1,27 @@
 
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { fetchUsers, fetchTeams, fetchGames, fetchPlayers } from "@/app/lib/data";
 
-// Async thunks for fetching data
+// Generic function to fetch specific data type
+const fetchDataFromAPI = async (type: string) => {
+  const res = await fetch(`/api/data/${type}`);
+  if (!res.ok) throw new Error(`Failed to fetch ${type}`);
+  return await res.json();
+};
+
 export const getUsers = createAsyncThunk("data/getUsers", async () => {
-  return await fetchUsers();
+  return await fetchDataFromAPI("users");
 });
 
 export const getTeams = createAsyncThunk("data/getTeams", async () => {
-  return await fetchTeams();
+  return await fetchDataFromAPI("teams");
 });
 
 export const getGames = createAsyncThunk("data/getGames", async () => {
-  return await fetchGames();
+  return await fetchDataFromAPI("games");
 });
 
 export const getPlayers = createAsyncThunk("data/getPlayers", async () => {
-  const players = await fetchPlayers();
-  
-  // Remove duplicates based on `id`
-  return players.filter(
-    (value, index, self) => index === self.findIndex((t) => t.id === value.id)
-  );
+  return await fetchDataFromAPI("players");
 });
 
 // State interface
@@ -108,10 +108,10 @@ const dataSlice = createSlice({
       }
     },
     removePlayerFromGlobalActive: (state, action) => {
-      state.activePlayers = state.activePlayers.filter((player) => player.id !== action.payload.id);
+      state.activePlayers = state.activePlayers.filter((player) => player.player_id !== action.payload.player_id);
     },
     deletePlayer: (state, action) => {
-      state.players = state.players.filter((player) => player.id !== action.payload.id);
+      state.players = state.players.filter((player) => player.player_id !== action.payload.player_id);
     },
   },
   extraReducers: (builder) => {

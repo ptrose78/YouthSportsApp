@@ -1,10 +1,22 @@
 // lib/data.ts
 import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "crypto";
+import { auth, currentUser } from "@clerk/nextjs/server";
 
 // Get environment variables
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+// Function to get the authenticated user's email
+export async function getUserEmail() {
+  const auth_result = await auth(); // Must be called inside a request scope
+  const userId = auth_result.userId;
+
+  if (!userId) return null;
+
+  const user = await currentUser();
+  return user?.primaryEmailAddress?.emailAddress || null;
+}
 
 // Check if variables are missing and handle gracefully
 if (!supabaseUrl || !supabaseKey) {
@@ -16,6 +28,15 @@ if (!supabaseUrl || !supabaseKey) {
 // Create a Supabase client
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// Define EmailLog interface
+interface EmailLog {
+  recipients: string[];
+  subject: string;
+  message: string;
+  sender: string;
+  created_at: string;
+  attachmentUrl?: string;
+}
 // Define PlayerStats interface
 interface PlayerStats {
   points: number;
@@ -42,9 +63,8 @@ export async function saveUser(email: string, team_name: string) {
       .from("users")
       .insert([
         {
-          id: randomUUID(),
           created_at: new Date().toISOString(),
-          email,
+          email, // Use the email as unique identifier
           team_name,
         },
       ])
@@ -56,12 +76,12 @@ export async function saveUser(email: string, team_name: string) {
     }
 
     // Ensure the user was inserted and we got an ID
-    const userId = userData?.[0]?.id;
+    const userId = userData?.[0]?.email;
     if (!userId) {
-      throw new Error("Failed to retrieve user ID after insertion.");
+      throw new Error("Failed to retrieve user email after insertion.");
     }
 
-    // Step 2: Insert into the "teams" table using the retrieved user ID
+    // Step 2: Insert into the "teams" table using the email as a foreign key
     const { data: teamData, error: teamError } = await supabase
       .from("teams")
       .insert([
@@ -69,7 +89,7 @@ export async function saveUser(email: string, team_name: string) {
           id: randomUUID(),
           created_at: new Date().toISOString(),
           team_name,
-          users_id: userId, // Use the user ID as the foreign key
+          email, // Use the email as a foreign key
         },
       ])
       .select(); // This returns the inserted row(s)
@@ -92,7 +112,7 @@ export async function saveUser(email: string, team_name: string) {
         {
           id: randomUUID(),
           created_at: new Date().toISOString(),
-          user_id: userId, // Link the user ID to the SiteData
+          email, // Link the email to the SiteData
           team_id: teamId,  // Link the team ID to the SiteData
           game_id: null, // You can set game_id to null if it's not available at the time of creation
         },
@@ -103,6 +123,12 @@ export async function saveUser(email: string, team_name: string) {
       console.error("Error saving site data:", siteDataError.message);
       throw new Error(siteDataError.message);
     }
+
+    console.log("userData:", userData);
+    console.log("teamData:", teamData);
+    console.log("siteData[0]", siteData[0])
+    console.log("siteData:", siteData);
+
 
     // Return the user, team, and site data for confirmation
     return {
@@ -119,79 +145,77 @@ export async function saveUser(email: string, team_name: string) {
 // Function to create players (existing from roster and new) for a new game
 export async function createPlayer(newPlayerName?: string, new_game_id?: string) {
   try {
-    let existingPlayerEntries: any[] = [];
     console.log("newPlayerName:", newPlayerName);
     console.log("new_game_id:", new_game_id);
 
-    // Step 1: Get the team_id and game_id from the siteData table
+    let newStatsEntries = [];
+
+    // Step 1: Get user's team_id and last known game_id
+    const email = await getUserEmail();
     const { data: siteData, error: siteDataError } = await supabase
+
       .from("site-data")
       .select("team_id, game_id")
-      .single(); // Assuming there's only one row for the current user
+      .eq("email", email)
+      .single();
 
-    if (siteDataError) {
-      console.error("Error fetching site data:", siteDataError.message);
-      throw new Error(siteDataError.message);
-    }
+    if (siteDataError) throw new Error(siteDataError.message);
 
     const team_id = siteData?.team_id;
-    const game_id_fromSiteData = siteData?.game_id; // Renaming for clarity
-    if (!team_id) {
-      throw new Error("Team not found in site data.");
-    }
+    const game_id_toUse = new_game_id || siteData?.game_id;
 
-    // Step 2: If game_id is passed as a parameter, use it, else fallback to game_id from siteData
-    const game_id_toUse = new_game_id || game_id_fromSiteData;
-    if (!game_id_toUse) {
-      throw new Error("Game ID not provided and not found in site data.");
-    }
+    if (!team_id) throw new Error("Team not found in site data.");
+    if (!game_id_toUse) throw new Error("Game ID not provided or found in site data.");
 
-    console.log("Using team_id from siteData:", team_id);
+    console.log("Using team_id:", team_id);
     console.log("Using game_id:", game_id_toUse);
 
-    // Step 3: Fetch all existing players for the team (if any)
-    const { data: allPlayers, error } = await supabase
-      .from("players")
-      .select("player_id, player_name, team_id, created_at")
-      .eq("team_id", team_id)
-      .order("created_at", { ascending: false }); // Ensures latest entries are first
+    // Step 2: Fetch existing players for the team and prepare stats entries for a new game
+    if (new_game_id) {
+      const { data: existingPlayers, error: fetchError } = await supabase
+        .from("players")
 
-    if (error) {
-      console.error("Error fetching players:", error.message);
-      throw new Error(error.message);
-    }
+        .select("player_id, player_name")
+        .eq("team_id", team_id);
 
-    // Step 4: Filter unique players by `player_id`
-    const existingPlayers = Array.from(
-      new Map(allPlayers.map(player => [player.player_id, player])).values()
-    );
+      if (fetchError) throw new Error(fetchError.message);
 
-    console.log("existingPlayers:", existingPlayers);
-    // Step 5: If existing players are found, create new entries for them with the new game_id
-    if (new_game_id && existingPlayers && existingPlayers.length > 0) {
-      existingPlayerEntries = existingPlayers.map((player) => ({
-        id: randomUUID(), // Generate a new ID for each new game entry
-        player_id: player.player_id, 
-        player_name: player.player_name, // Keep the same name
+      newStatsEntries = existingPlayers.map((player) => ({
+        id: randomUUID(), // New unique stat entry ID
+        player_id: player.player_id,
+        player_name: player.player_name,
         team_id,
-        game_id: new_game_id, // New game
+        game_id: game_id_toUse,
         points: 0,
         rebounds: 0,
-        assists: 0,
+        assists: 0,   
         time_played: 0,
       }));
     }
 
-    console.log("Existing player entries:", existingPlayerEntries);
-
-    // Step 6: Add the new player if provided
+    // Step 4: If a new player is provided, add to `players` table and prepare `player-stats` entry
     if (newPlayerName) {
-      existingPlayerEntries.push({
-        id: randomUUID(), //Create new id
-        player_id: randomUUID(), //Create new player id
-        player_name: newPlayerName, // The new player being added
+      const newPlayerId = randomUUID();
+      
+      // Insert new player into `players`
+      const { error: playerInsertError } = await supabase.from("players").insert([
+        {
+          player_id: newPlayerId,
+          player_name: newPlayerName,
+          team_id,
+        }
+
+      ]);
+
+      if (playerInsertError) throw new Error(playerInsertError.message);
+
+      // Create stats entry for the new player
+      newStatsEntries.push({
+        id: randomUUID(),
+        player_id: newPlayerId,
+        player_name: newPlayerName,
         team_id,
-        game_id: game_id_fromSiteData,
+        game_id: game_id_toUse,
         points: 0,
         rebounds: 0,
         assists: 0,
@@ -199,33 +223,23 @@ export async function createPlayer(newPlayerName?: string, new_game_id?: string)
       });
     }
 
-    // Step 7: If there's nothing to insert, exit early
-    if (existingPlayerEntries.length === 0) {
-      console.log("No players to insert.");
-      return { message: "No players were assigned to the game." };
+    console.log("newStatsEntries:",newStatsEntries)
+    // Step 5: Insert `player-stats` entries
+    if (newStatsEntries.length > 0) {
+      const { error: statsInsertError } = await supabase.from("players-stats").insert(newStatsEntries);
+      if (statsInsertError) {
+        console.error("Supabase Insert Error:", statsInsertError);
+        throw new Error(statsInsertError.message);
+      }
     }
 
-    // Step 8: Insert new records into the database
-    const { error: insertError } = await supabase.from("players").insert(existingPlayerEntries);
-    const { error: insertErrorStats } = await supabase.from("players-stats").insert(existingPlayerEntries);
-
-
-    if (insertError) {
-      console.error("Error inserting new players:", insertError.message);
-      throw new Error(insertError.message);
-    }
-
-    if (insertErrorStats) {
-      console.error("Error inserting new players stats:", insertErrorStats.message);
-      throw new Error(insertErrorStats.message);
-    }
-
-    return { message: "Players assigned to game!", players: existingPlayerEntries };
+    return { message: "Players assigned to game!", stats: newStatsEntries };
   } catch (error) {
     console.error("Error assigning players to game:", error);
     throw error;
   }
 }
+
 
 // Delete a player from the players table
 export async function deletePlayer(player_id: string) {
@@ -252,9 +266,11 @@ export async function deletePlayer(player_id: string) {
 export async function createGame(opponent_name: string, game_length: number) {
   try {
     // Step 1: Get the team_id and user_id from the siteData table
+    const email = await getUserEmail();
     const { data: siteData, error: siteDataError } = await supabase
       .from("site-data")
-      .select("id, team_id, email")
+      .select("id, team_id")
+      .eq("email", email)
       .single();
 
     if (siteDataError) {
@@ -262,7 +278,6 @@ export async function createGame(opponent_name: string, game_length: number) {
       throw new Error(siteDataError.message);
     }
 
-    const email = siteData.email;
     const team_id = siteData.team_id;
 
     if (!team_id) {
@@ -305,7 +320,7 @@ export async function createGame(opponent_name: string, game_length: number) {
     }
 
     // Step 4: Reset player stats
-    await resetPlayerStats();
+    // await resetPlayerStats();
 
     return gameData;
   } catch (error) {
@@ -433,7 +448,14 @@ export async function fetchTeams() {
 
 // Fetch all games
 export async function fetchGames() {
-  const { data, error } = await supabase.from("games").select("*");
+  const email = await getUserEmail();
+  const { data: siteData, error: siteDataError } = await supabase
+  .from("site-data")
+  .select("team_id")
+  .eq("email", email)
+  .single();
+
+  const { data, error } = await supabase.from("games").select("*").eq("team_id", siteData.team_id);
  
   if (error) {
     console.error("Error fetching roster:", error.message);
@@ -444,8 +466,12 @@ export async function fetchGames() {
 
 // Fetch all players
 export async function fetchPlayers() {
-
-  const { data: siteData, error: siteDataError } = await supabase.from("site-data").select("game_id");
+  const email = await getUserEmail();
+  const { data: siteData, error: siteDataError } = await supabase
+    .from("site-data")
+    .select("team_id")
+    .eq("email", email)
+    .single();
 
   if (siteDataError) {
     console.error("Error fetching site data:", siteDataError.message);
@@ -456,13 +482,8 @@ export async function fetchPlayers() {
     throw new Error("Site data not found.");
   }
 
-  const game_id = siteData[0].game_id;
+  const { data, error } = await supabase.from("players").select("*").eq("team_id", siteData.team_id);
 
-  if (!game_id) {
-    throw new Error("Game ID not found in site data.");
-  }
-
-  const { data, error } = await supabase.from("players").select("*").eq("game_id", game_id);
   if (error) {
     console.error("Error fetching roster:", error.message);
     throw new Error(error.message);
@@ -569,21 +590,19 @@ export async function createSiteData(user_id?: string, team_id?: string, game_id
 
 
 export async function postPlayerStats(player_id: string | number, stats: PlayerStats) {
-  const { points, rebounds, assists, time_played } = stats;
-  console.log(stats)
-  
-  const siteData = await getSiteData();
 
+  const email = await getUserEmail();
+    const { data: siteData, error: siteDataError } = await supabase
+    .from("site-data")
+    .select("team_id, game_id")
+    .eq("email", email)
+    .single();
+
+  const { points, rebounds, assists, time_played } = stats;
+ 
   if (!siteData) {
     throw new Error("Site data not found.");
   }
-
-  const game_id = siteData[0].game_id;
-
-  if (!game_id) {
-    throw new Error("Game ID not found in site data.");
-  }
-
 
   const { data, error } = await supabase
     .from("players-stats")
@@ -595,12 +614,14 @@ export async function postPlayerStats(player_id: string | number, stats: PlayerS
       updated_at: new Date().toISOString(), // Optionally track when the update happened
     })
     .eq("player_id", player_id) // Match the correct player
-    .eq("game_id", game_id); // Match the correct game
+    .eq("team_id", siteData.team_id) // Match the correct team
+    .eq("game_id", siteData.game_id); // Match the correct game
 
   if (error) {
     console.error("Error updating stats:", error.message);
     throw new Error(error.message);
   }
+
 
   return data;
 }
@@ -636,19 +657,30 @@ export async function resetPlayerStats() {
 }
 
 export async function getPlayerStats(player_id: string) {
-  const { data, error } = await supabase.from("players-stats").select("points, rebounds, assists, time_played").eq("player_id", player_id).order("created_at", { ascending: false }).limit(1);
+ 
+  const { data, error } = await supabase
+    .from("players-stats")
+    .select("points, rebounds, assists, time_played")
+    .eq("player_id", player_id)
+    .order("created_at", { ascending: false })
+    .limit(1);
   return data;
 }
+
 
 
 //email
 const TABLE_NAME = "email-logs";  // Table name
 
 export async function getEmailLogs() {
+  const email = await getUserEmail();
+
   const { data, error } = await supabase
     .from(TABLE_NAME)
     .select("*")
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .eq("email", email);
+
 
   if (error) {
     console.error(error);
@@ -658,29 +690,10 @@ export async function getEmailLogs() {
   return data;
 }
 
-export async function saveEmailLog({
-  recipients,
-  message,
-  created_at,
-  subject,
-  sender,
-}: {
-  recipients: string[];
-  message: string;
-  created_at: string;
-  subject: string;
-  sender: string;
-}) {
+export async function saveEmailLog(emailLog: EmailLog) {
+  const email = await getUserEmail();
   try {
-    const { error } = await supabase.from(TABLE_NAME).insert([
-      {
-        recipients, 
-        message,
-        created_at,
-        subject,
-        sender,
-      },
-    ]);
+    const { error } = await supabase.from(TABLE_NAME).insert([{email, ...emailLog}]);
 
     if (error) {
       console.error("Error saving email log:", error);
@@ -690,4 +703,141 @@ export async function saveEmailLog({
     console.error("Unexpected error saving email log:", error);
     throw new Error("Failed to save email log.");
   }
+}
+
+
+
+// Upload file to Supabase and return the public URL
+export const uploadFile = async (file: File): Promise<string | null> => {
+  try {
+    const buffer = await file.arrayBuffer();
+    const blob = new Blob([buffer], { type: file.type });
+
+    const fileName = `${Date.now()}_${file.name}`; // Generate file name outside the upload call
+    const filePath = `public/${fileName}`; // Construct file path
+
+    const { data, error } = await supabase.storage
+      .from("uploads")
+      .upload(filePath, blob, {
+        cacheControl: "3600",
+        upsert: false,
+      });
+
+    if (error) {
+      console.error("Upload failed:", error); // Log the whole error object
+      throw new Error(`File upload failed: ${error.message}`); // Throw an error with a message
+    }
+
+    const { data: { publicUrl } } = supabase.storage.from("uploads").getPublicUrl(data.path);
+
+    if (!publicUrl) {
+      console.error("Could not generate public URL after successful upload.");
+      throw new Error("Could not generate public URL.");
+    }
+
+    console.log("File uploaded successfully. Public URL:", publicUrl); // Log success
+
+    return publicUrl;
+
+  } catch (err) {
+    console.error("Error in uploadFile function:", err);
+    return null; // Or throw the error if you want the caller to handle it
+  }
+};
+
+
+// Set subscription status in the database
+export async function setSubscriptionStatus(status: string) {
+  const email = await getUserEmail();
+
+  if (!email) {
+    throw new Error("User email not found");
+  }
+
+  try {
+    // 1. Check if the email exists in the users table:
+    const { data: userExists, error: userError } = await supabase
+      .from('users') // Replace 'users' with the actual name of your users table
+      .select('email')
+      .eq('email', email)
+      .limit(1);
+
+    if (userError) {
+      console.error("Error checking user existence:", userError);
+      throw new Error("Failed to check user existence");
+    }
+
+    if (!userExists || userExists.length === 0) {
+      console.error("User does not exist:", email);
+      throw new Error("User does not exist.  Cannot create subscription.");
+    }
+
+    // 2. Now that we know the user exists, proceed with subscription logic:
+    const { data: existingSubscription, error: existingError } = await supabase
+      .from("subscriptions")
+      .select('id')
+      .eq('email', email)
+      .limit(1);
+
+    if (existingError) {
+      console.error("Error checking existing subscription:", existingError);
+      throw new Error("Failed to check existing subscription");
+    }
+
+    if (existingSubscription && existingSubscription.length > 0) {
+      // Update existing subscription
+      const { error: updateError } = await supabase
+        .from("subscriptions")
+        .update({ status })
+        .eq('email', email);
+
+      if (updateError) {
+        console.error("Error updating subscription:", updateError);
+        throw new Error("Failed to update subscription status in database");
+      }
+      console.log("Subscription updated successfully for", email);
+
+    } else {
+    const { data: subscriptionData, error: subscriptionError } = await supabase
+      .from("subscriptions")
+      .insert([
+        {
+          id: randomUUID(),
+          status: status,
+          email: email,
+        },
+      ])
+      .select();
+
+    if (subscriptionError) {
+      console.error("Error inserting subscription:", subscriptionError);
+      console.error("Full error object:", JSON.stringify(subscriptionError, null, 2));
+      console.error("Error message:", subscriptionError.message);
+      console.error("Error details:", subscriptionError.details);
+      throw new Error("Failed to set subscription status in database");
+    }
+      console.log("Subscription created successfully for", email);
+    }
+
+  } catch (error) {
+    console.error("Database operation error:", error);
+    throw error;
+  }
+}
+
+// Update subscription status in the database
+export async function updateSubscriptionStatusInDB(status: string) {
+
+  const email = await getUserEmail();
+
+  if (!email) throw new Error("User email not found");
+
+  const { error } = await supabase
+    .from("subscriptions")
+    .update({
+      status: status,
+    })
+    .eq("email", email);
+
+  if (error) throw new Error("Failed to update subscription status in database");
 }

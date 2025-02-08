@@ -6,6 +6,7 @@ export async function POST(request: Request) {
   try {
     const { opponent_name, game_length } = await request.json();
 
+
     if (!opponent_name) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }

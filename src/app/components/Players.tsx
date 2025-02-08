@@ -87,9 +87,10 @@ const Players = () => {
 
           {players.map((player) => (
               <DraggablePlayer 
-              key={player.id} 
+              key={player.player_id} 
               player={player} 
             />
+
           ))}
         </ul>
       </div>

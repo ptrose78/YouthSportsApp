@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
-
+import { setSubscriptionStatus } from '@/app/lib/data';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function GET(req) {
@@ -14,7 +14,6 @@ export async function GET(req) {
 
     // Retrieve customer from Stripe using email
     const customers = await stripe.customers.list({ email });
-    console.log("customers", customers);
 
     if (!customers.data.length) {
       return NextResponse.json({ isSubscribed: false, message: 'Customer not found' });
@@ -32,9 +31,14 @@ export async function GET(req) {
     const hasActiveSubscription = subscriptions.data.length > 0;
     console.log("hasActiveSubscription", hasActiveSubscription);
 
+    if (!hasActiveSubscription) {
+      await setSubscriptionStatus("inactive");
+    }
+
     return NextResponse.json({ isSubscribed: hasActiveSubscription });
   } catch (error) {
     console.error('Error checking subscription:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
+
 }

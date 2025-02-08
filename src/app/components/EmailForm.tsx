@@ -14,6 +14,9 @@ const EmailForm = () => {
 
     try {
       const response = await sendEmail(formData);
+      console.log("response", response);
+      console.log("response.success", response?.success);
+      console.log("response.message", response?.message);
       if (response?.success) {
         setSuccessMessage(response.message); 
         form.reset(); 
@@ -40,6 +43,12 @@ const EmailForm = () => {
           name="subject"
           placeholder="Enter subject"
           required
+          className="w-full p-2 border rounded"
+        />
+        <input
+          type="file"
+          name="attachment"
+          accept=".pdf,.jpg,.png,.docx"
           className="w-full p-2 border rounded"
         />
         <textarea

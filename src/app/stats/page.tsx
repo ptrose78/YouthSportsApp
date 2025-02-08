@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from '@/app/store/hooks';
 import { getGames, getTeams } from '../store/features/dataSlice';
 import { selectTeams } from '../store/features/dataSlice';
 import Link from 'next/link';
+import NavBar from '@/app/components/NavBar';
 
 export default function PlayersList() {
   const dispatch = useAppDispatch();
@@ -68,6 +69,8 @@ export default function PlayersList() {
 
 
   return (
+    <> 
+    <NavBar />
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-semibold mb-4">Games</h1>
 
@@ -85,42 +88,48 @@ export default function PlayersList() {
 
       {selectedGameId && playerDetails ? (
         <div className="overflow-x-auto mt-8">
-          <h2 className="text-3xl font-bold text-center text-indigo-600 mb-6">
-            Box Score for { teams[0].team_name } vs. {selectedOpponentName}
-          </h2>
-          <table className="min-w-full table-auto bg-white border border-gray-300 shadow-md rounded-lg">
+        <h2 className="text-3xl font-bold text-center text-indigo-600 mb-6">
+          Box Score for {teams[0].team_name} vs. {selectedOpponentName}
+        </h2>
+        <div className="w-full max-w-full overflow-x-auto">
+          <table className="w-full table-fixed min-w-[340px] bg-white border border-gray-300 shadow-md rounded-lg">
             <thead>
               <tr className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white text-sm font-medium">
-                <th className="px-4 py-2 border-b text-center">Name</th>
-                <th className="px-4 py-2 border-b text-center">Time Played</th>
-                <th className="px-4 py-2 border-b text-center">Points</th>
-                <th className="px-4 py-2 border-b text-center">Rebounds</th>
-                <th className="px-4 py-2 border-b text-center">Assists</th>
+                <th className="px-2 py-2 border-b text-center">Name</th>
+                <th className="px-2 py-2 border-b text-center">Time Played</th>
+                <th className="px-2 py-2 border-b text-center">Points</th>
+                <th className="px-2 py-2 border-b text-center">Rebounds</th>
+                <th className="px-2 py-2 border-b text-center">Assists</th>
               </tr>
             </thead>
-
+      
             <tbody>
               {playerDetails.length > 0 ? (
                 playerDetails.map((player) => (
                   <tr key={player.id} className="text-sm text-gray-700 border-b hover:bg-blue-50">
-                    <td className="px-4 py-2 text-center font-semibold">{player.player_name}</td>
-                    <td className="px-4 py-2 text-center">{formatTime(player.time_played)}</td>
-                    <td className="px-4 py-2 text-center">{player.points}</td>
-                    <td className="px-4 py-2 text-center">{player.rebounds}</td>
-                    <td className="px-4 py-2 text-center">{player.assists}</td>
+                    <td className="px-2 py-2 text-center font-semibold">{player.player_name}</td>
+                    <td className="px-2 py-2 text-center">{formatTime(player.time_played)}</td>
+                    <td className="px-2 py-2 text-center">{player.points}</td>
+                    <td className="px-2 py-2 text-center">{player.rebounds}</td>
+                    <td className="px-2 py-2 text-center">{player.assists}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="px-4 py-2 text-center text-gray-500">No player stats available for this game.</td>
+                  <td colSpan={5} className="px-4 py-2 text-center text-gray-500">
+                    No player stats available for this game.
+                  </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
+      </div>
       ) : (
         <p className="text-center text-gray-500 mt-8">Select a game to view stats.</p>
       )}
     </div>
+    </>
   );
 }
+

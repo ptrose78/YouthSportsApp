@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import { loadStripe } from '@stripe/stripe-js'; 
 import { useUser } from '@clerk/clerk-react';
-import { getEmailLogs } from "@/app/lib/data";
 import EmailForm from "@/app/components/EmailForm";
-
+import NavBar from '../components/NavBar';
+import Link from 'next/link';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY); // Initialize Stripe
 
@@ -14,26 +14,41 @@ const MyRestrictedComponent = () => {
   const [hasAccess, setHasAccess] = useState(false);
   const [loading, setLoading] = useState(true);
   const [emailLogs, setEmailLogs] = useState([]);
+  const [sessionId, setSessionId] = useState("");
+  const [status, setStatus] = useState("");
 
   useEffect(() => {
     const fetchEmailLogs = async () => {
-      const logs = await getEmailLogs(); // Fetch logs on the server
-      setEmailLogs(logs);
+      try {
+        const response = await fetch("/api/getEmailLogs?email=" + user?.primaryEmailAddress?.emailAddress);
+        
+        if (!response.ok) throw new Error("Failed to fetch email logs");
+        
+        const logs = await response.json();
+        console.log("logs", logs);
+        setEmailLogs(logs);
+      } catch (error) {
+        console.error("Error fetching email logs:", error);
+      }
     };
-    fetchEmailLogs();
-  }, []);
+    
+    if (user?.primaryEmailAddress?.emailAddress) {
+      fetchEmailLogs();
+    }
+  }, [user]);
 
   useEffect(() => {
     const checkSubscription = async () => {
       if (isLoaded && isSignedIn && user?.primaryEmailAddress?.emailAddress) {
         try {
-          const response = await fetch(`/api/checkSubscription?email=${user.primaryEmailAddress.emailAddress}`);
-          console.log("response", response.ok);
+          const response = await fetch("/api/checkSubscription?email=" + user.primaryEmailAddress.emailAddress);
+          
+          console.log("response", response);
+          
           if (response.ok) {
+
             const data = await response.json();
-            console.log("data", data);
             setHasAccess(data.isSubscribed);
-            // setHasAccess(false);
           } else {
             console.error("Error checking subscription:", response.status);
             setHasAccess(false);
@@ -45,7 +60,7 @@ const MyRestrictedComponent = () => {
           setLoading(false);
         }
       } else {
-        setLoading(true); // Keep loading true if not loaded or signed in
+        setLoading(true);
         setHasAccess(false);
       }
     };
@@ -53,61 +68,78 @@ const MyRestrictedComponent = () => {
     checkSubscription();
   }, [isLoaded, isSignedIn, user]);
 
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const checkPaymentStatus = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`/api/checkPayment?session_id=${sessionId}`);
+        const data = await response.json();
+        console.log("data", data);
+
+        if (data.paymentStatus === "paid") {
+          setStatus("Subscription Activated");
+        } else {
+          setStatus("Payment Not Completed");
+        }
+      } catch (error) {
+        setStatus("Error checking payment status.");
+      }
+      setLoading(false);
+    };
+
+    checkPaymentStatus();
+  }, [sessionId]);
+
   const handleSubscribe = async () => {
-    console.log("handleSubscribe");
     if (!stripePromise) return;
   
     const stripe = await stripePromise;
-    console.log(stripe);
   
     if (!user || !user.primaryEmailAddress) {
       console.error("User not logged in or email not available");
       return;
     }
-    console.log(user.primaryEmailAddress.emailAddress);
-    console.log(user);
+    
     try {
-      const response = await fetch('/api/subscribe', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userEmail: user.primaryEmailAddress.emailAddress,
-          productId: 'price_1QpI1wGM8GtOeckX7MXADWFp', // Stripe Price ID
+          priceId: "price_1Qp04h4RUzFrzsGP5kH3y1Eo", //Dev Stripe price ID
+          // priceId: "price_1QpI1wGM8GtOeckX7MXADWFp", // Production Stripe Price ID
         }),
       });    
-      console.log("response", response);
+      
       const data = await response.json();
-      console.log('Stripe API response:', data); // Log response
-      console.log("data.sessionId", data.sessionId);
   
       if (data.sessionId) {
-        console.log("data.sessionId", data.sessionId);
         const { error } = await stripe.redirectToCheckout({ sessionId: data.sessionId });
+        setSessionId(data.sessionId);
   
         if (error) {
-          console.error('Stripe checkout error:', error);
+          console.error("Stripe checkout error:", error);
         }
       } else {
-        console.error('No session ID received from server:', data);
+        console.error("No session ID received from server:", data);
       }
     } catch (error) {
-      console.error('Error subscribing:', error);
+      console.error("Error subscribing:", error);
     }
   };
+
   if (loading) {
     return <div>Loading...</div>;
   }
 
   return hasAccess ? (
+    <>
+    <NavBar />
     <div className="container mx-auto p-6">
       <h1 className="text-3xl font-bold mb-4">Team Communication</h1>
-
-      {/* Email Form */}
       <EmailForm />
-
-      {/* Email Log */}
       <h2 className="text-2xl font-semibold mt-8">Sent Emails</h2>
       <ul className="mt-4">
         {emailLogs.map((log, index) => (
@@ -115,11 +147,18 @@ const MyRestrictedComponent = () => {
             <strong>To:</strong> {log.recipients.join(", ")} <br />
             <strong>Message:</strong> {log.message} <br />
             <strong>Sent At:</strong> {new Date(log.created_at).toLocaleString()}
+            {log.attachment_url && (
+              <p><Link href={log.attachment_url} target="_blank">View Attachment</Link></p>
+            )}
           </li>
         ))}
       </ul>
     </div>
+
+    </>
   ) : (
+    <>
+    <NavBar />
     <div className="text-center">
       <h1 className="text-2xl font-bold">Subscribe for Access</h1>
       <p className="mt-2">Please subscribe to access this content.</p>
@@ -131,11 +170,7 @@ const MyRestrictedComponent = () => {
       </button>
       <div className="opacity-40 pointer-events-none container mx-auto p-6">
         <h1 className="text-3xl font-bold mb-4">Team Communication</h1>
-
-        {/* Email Form */}
         <EmailForm />
-
-        {/* Email Log */}
         <h2 className="text-2xl font-semibold mt-8">Sent Emails</h2>
         <ul className="mt-4">
           {emailLogs.map((log, index) => (
@@ -143,11 +178,15 @@ const MyRestrictedComponent = () => {
               <strong>To:</strong> {log.recipients.join(", ")} <br />
               <strong>Message:</strong> {log.message} <br />
               <strong>Sent At:</strong> {new Date(log.created_at).toLocaleString()}
+              {log.attachment_url && (
+                <p><Link href={log.attachment_url} target="_blank">View Attachment</Link></p>
+              )}
             </li>
           ))}
         </ul>
       </div>
     </div>
+    </>
   );
 };
 

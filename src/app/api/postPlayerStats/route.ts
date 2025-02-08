@@ -9,10 +9,10 @@ import { postPlayerStats } from "@/app/lib/data"; // Import data.ts functions
 // Handle POST requests to save stats
 export async function POST(request: Request) {
   const body = await request.json();
-  const { playerId, gameId, stats } = body;
+  const { playerId, stats } = body;
   console.log(body)
 
-  if (!playerId || !gameId || !stats) {
+  if (!playerId || !stats) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 

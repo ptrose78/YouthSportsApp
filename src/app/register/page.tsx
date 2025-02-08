@@ -25,7 +25,7 @@ const saveUser = async (email: string, team_name: string) => {
   }
 };
 
-const UserForm = () => {
+const Register = () => {
   const { user, isLoaded, isSignedIn } = useUser();
   const [userExists, setUserExists] = useState(null);
   const router = useRouter();
@@ -39,7 +39,13 @@ const UserForm = () => {
           const response = await fetch(`/api/user?email=${user.primaryEmailAddress.emailAddress}`);
           if (response.ok) {
             const data = await response.json();
-            setUserExists(data.exists);
+            console.log(data);
+            if (data.exists) {
+              router.push('/scoreboard');
+            } else {
+              setUserExists(false);
+            }
+
           } else {
             console.error("Error checking user existence:", response.status);
             setUserExists(false);
@@ -48,7 +54,7 @@ const UserForm = () => {
           console.error("Error checking user existence:", error);
           setUserExists(false);
         }
-      } else {
+      } else {  
         setUserExists(null);
       }
     };
@@ -56,78 +62,25 @@ const UserForm = () => {
     checkUserExists();
   }, [isLoaded, isSignedIn, user]);
 
-
-  //handle submit
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    if (!isLoaded ||!isSignedIn) {
-      return;
-    }
-
-    setIsLoading(true); // Set loading to true
-
-    const formData = new FormData(e.currentTarget);
-    const team_name = formData.get("team_name") as string;
-
-    const clerkEmail = user?.primaryEmailAddress?.emailAddress;
-
-    if (!clerkEmail) {
-      console.error("Clerk email not available.");
-      setIsLoading(false); // Reset loading state
-      return;
-    }
-
-    try {
-      const result = await saveUser(clerkEmail, team_name);
-      console.log("User saved:", result);
-      const form = e.target as HTMLFormElement;
-      if (form) {
-        form.reset();
-      }
-      alert("User registered successfully!");
+  //handle form submission
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.target as HTMLFormElement);
+    const team_name = formData.get('team_name') as string;
+    const result = await saveUser(user?.primaryEmailAddress?.emailAddress, team_name);
+    console.log(result);
+    if (result.success) {
       router.push('/scoreboard');
-    } catch (error) {
-      console.error("Error in handleSubmit:", error);
-      setIsLoading(false); // Reset loading state even on error
-    } finally {
-      setIsLoading(false); // Ensure loading is reset regardless of success/failure
+    } else {
+      console.error("Error saving user:", result.status);
     }
   };
 
-  //if user exists, redirect to scoreboard
-  if (userExists === true) {
-    router.push('/scoreboard');
-  }
 
   //if user does not exist, show the form
-  if (userExists === false) {
+  if (userExists === false) {  
     return (
-     
-        <form
-          onSubmit={handleSubmit}
-
-
-          className="bg-white shadow-lg rounded-lg p-6 w-full max-w-md"
-        >
-          <h2 className="text-2xl font-bold text-center text-gray-700 mb-4">
-            Register User
-          </h2>
-
-          <div className="mb-4">
-            <label className="block text-gray-700 font-semibold mb-2">
-              Email
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={user?.primaryEmailAddress?.emailAddress || ""}
-              readOnly
-              required
-              className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
+        <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label className="block text-gray-700 font-semibold mb-2">
               Team Name
@@ -145,13 +98,12 @@ const UserForm = () => {
             type="submit"
             className="w-full bg-blue-500 text-white font-semibold p-2 rounded-lg hover:bg-blue-600 transition duration-300 disabled:bg-blue-300 disabled:cursor-not-allowed"
             disabled={isLoading} // Disable the button while loading
-          >
+            >
             {isLoading? "Submitting...": "Submit"} {/* Show loading text */}
           </button>
         </form>
-     
     );
   }
 };
 
-export default UserForm;
+export default Register;

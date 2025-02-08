@@ -2,7 +2,7 @@
 import "./globals.css";
 import { Metadata } from "next";
 import ClientLayout from '@/app/RootLayout.client'; // Import ClientLayout
-import NavBar from "@/app/components/NavBar";
+
 
 // Define the metadata for the app
 export const metadata: Metadata = {

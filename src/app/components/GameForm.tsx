@@ -2,8 +2,11 @@
 
 import { setCurrentGame, getGames } from '@/app/store/features/dataSlice';
 import { useDispatch } from 'react-redux';
+import { useState } from 'react';
+import { useUser } from '@clerk/nextjs';
 
 const GameForm = () => {
+  const [isFormVisible, setIsFormVisible] = useState(false);
   const dispatch = useDispatch();
 
   const saveGame = async (opponent_name: string, game_length: number) => {
@@ -26,6 +29,8 @@ const GameForm = () => {
       // Dispatch the game to Redux
       dispatch(setCurrentGame(data.game));
 
+      // Collapse the form after submitting
+      setIsFormVisible(false);  // Hide the form after successful submission
 
     } catch (error) {
       console.error("Error adding game:", error);
@@ -46,42 +51,50 @@ const GameForm = () => {
   };
 
   return (
-    <div className="flex justify-center items-center mb-4">
-      <form 
-        onSubmit={handleSubmit} 
-        className="rounded-lg p-6 w-full max-w-md"
-      >
-        <h2 className="text-3xl font-bold text-center text-gray-700 mb-4">Add New Game</h2>
-
-        <div className="mb-4">
-          
-          <input 
-            type="text" 
-            name="opponent_name" 
-            placeholder="Enter opponent name" 
-            required
-            className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
-        </div>
-
-        <div className="mb-4">
-          
-          <input 
-            type="number" 
-            name="game_length" 
-            placeholder="Enter game length in minutes" 
-            required
-            className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
-        </div>
-
-        <button 
-          type="submit" 
-          className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded-lg transition duration-300"
+    <div className="flex flex-col items-center mb-4">
+      <div className="w-full max-w-md bg-red-100">
+        {/* Title with toggle functionality */}
+        <h2 
+          className="text-3xl font-bold text-center text-gray-700 mb-2 mt-2 mr-2 ml-2 cursor-pointer"
+          onClick={() => setIsFormVisible(!isFormVisible)}  // Toggle the form visibility
         >
-          Add Game
-        </button>
-      </form>
+          Add New Game
+        </h2>
+
+        {/* Form section that only takes space when visible */}
+        <div 
+          className={`transition-all duration-500 ease-in-out ${isFormVisible ? 'max-h-[500px] p-6' : 'max-h-0 p-0 overflow-hidden'}`}
+        >
+          <form onSubmit={handleSubmit} className="rounded-lg w-full">
+            <div className="mb-4">
+              <input 
+                type="text" 
+                name="opponent_name" 
+                placeholder="Enter opponent name" 
+                required
+                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+            </div>
+
+            <div className="mb-4">
+              <input 
+                type="number" 
+                name="game_length" 
+                placeholder="Enter game length (mins)" 
+                required
+                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+            </div>
+
+            <button 
+              type="submit" 
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded-lg transition duration-300"
+            >
+              Add Game
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 };

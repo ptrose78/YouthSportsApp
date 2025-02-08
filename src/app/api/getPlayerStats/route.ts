@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
-import { getPlayerStats } from "@/app/lib/data";
+import { getPlayerStats } from "@/app/lib/data"; // Example function
 
-// Handle GET requests: Get the latest stats for a player
-export async function GET(request: Request) {
-  const body = await request.json();
-  const { player_id } = body;
-  const result = await getPlayerStats(player_id);
-  console.log("result:",result)
-  return NextResponse.json({ result }, { status: 200 });
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const playerId = searchParams.get("playerId");
+  console.log("playerId:",playerId)
+
+  if (!playerId) {
+    return NextResponse.json({ error: "Missing playerId" }, { status: 400 });
+  }
+
+  const stats = await getPlayerStats(playerId);
+  return NextResponse.json(stats);
 }

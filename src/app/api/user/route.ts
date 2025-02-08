@@ -8,15 +8,16 @@ export async function POST(request: Request) {
   const { email, team_name } = body;
 
   if (!email || !team_name) {
-    return NextResponse.json({ error: "Missing required field: email or name" }, { status: 400 });
+    return NextResponse.json({ error: "Missing required field: email or name", success: false, status: 400 });
   }
   
   try {
     const result = await saveUser(email, team_name);
-    return NextResponse.json({ message: "User added!", result }, { status: 200 });
+    return NextResponse.json({ message: "User added!", result, success: true, status: 200 });
   } catch (error) {
-    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+    return NextResponse.json({ error: (error as Error).message, success: false, status: 500 });
   }
+
 }
 
 export async function GET(request: Request) {
@@ -24,7 +25,7 @@ export async function GET(request: Request) {
   const email = searchParams.get("email");
 
   if (!email) {
-    return NextResponse.json({ error: "Missing email parameter" }, { status: 400 });
+    return NextResponse.json({ error: "Missing email parameter", success: false, status: 400 });
   }
 
   try {
@@ -35,6 +36,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ exists }, { status: 200 }); // Return exists as boolean
   } catch (error) {
     console.error("Error in GET /api/user:", error);
-    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+    return NextResponse.json({ error: (error as Error).message, success: false, status: 500 });
   }
 }
