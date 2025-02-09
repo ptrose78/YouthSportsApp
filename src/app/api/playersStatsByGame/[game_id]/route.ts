@@ -1,11 +1,17 @@
 import { NextResponse } from "next/server";
 import { fetchPlayersStatsByGame } from "@/app/lib/data";
+import { auth } from "@clerk/nextjs/server";
 
-export async function GET(request: Request, context) {
+export async function GET(request: Request, { params }: { params: Promise<{ game_id: string }> }) {
   try {
-    const { game_id } = context.params; // No need to await, it's already available
+    const auth_result = await auth();
+    const userId = auth_result?.userId;
 
-    console.log("game_id:", game_id); 
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const game_id  = (await params).game_id; 
 
     if (!game_id) {
       return NextResponse.json({ error: "Game ID is required" }, { status: 400 });

@@ -2,19 +2,20 @@ import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { fetchUsers, fetchTeams, fetchGames, fetchPlayers } from "@/app/lib/data";
 
-// Dynamic API Route Handler
-export async function GET(req: NextRequest, context: { params: { type: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ type: string }> }) {  
   try {
-    const { params } = context; 
-    const auth_result = await auth(); 
+    const auth_result = await auth();
     const userId = auth_result?.userId;
+
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const type  = (await params).type;
+
     let data;
-    switch (params.type) {
+    switch (type) {
       case "users":
         data = await fetchUsers();
         break;

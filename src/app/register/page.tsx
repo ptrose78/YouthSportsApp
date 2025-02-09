@@ -60,7 +60,7 @@ const Register = () => {
     };
 
     checkUserExists();
-  }, [isLoaded, isSignedIn, user]);
+  }, [isLoaded, isSignedIn, user, router]);
 
   //handle form submission
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
