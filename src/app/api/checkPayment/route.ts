@@ -2,9 +2,11 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { setSubscriptionStatus } from "@/app/lib/data"; // Your function to update DB
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-01-27.acacia",
-});
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('Missing STRIPE_SECRET_KEY environment variable');
+}
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
