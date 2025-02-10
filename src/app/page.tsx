@@ -7,8 +7,6 @@ import { useEffect } from 'react';
  
 const HomePage = () => {
   const { isSignedIn, user } = useUser();
-  console.log(isSignedIn);
-  console.log(user);
   const router = useRouter();
 
   // This effect runs when the user is signed in
@@ -23,11 +21,12 @@ const HomePage = () => {
   }, [isSignedIn, user, router]);
 
   return (
-    <div>
-      {/* Show the SignIn form when user is not signed in and not on sign-up page */}
-        <SignIn
-          fallbackRedirectUrl="/register"
-        />
+    <div className="flex justify-center items-center min-h-screen">
+    <div className="grid place-items-center h-screen min-h-screen"> {/* Center with Grid */}
+      <SignIn
+        fallbackRedirectUrl="/register"
+      />
+    </div>
     </div>
   );
 };

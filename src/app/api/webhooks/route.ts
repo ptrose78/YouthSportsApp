@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { updateSubscriptionStatusInDB } from "@/app/lib/data";  
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
+const stripe = new Stripe(process.env.PRODUCTION_STRIPE_SECRET_KEY as string);
 
 export async function POST(req: Request) {
   const body = await req.text();

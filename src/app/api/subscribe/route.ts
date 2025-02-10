@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { setSubscriptionStatus } from '@/app/lib/data';
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('Missing STRIPE_SECRET_KEY environment variable');
+if (!process.env.PRODUCTION_STRIPE_SECRET_KEY) {
+  throw new Error('Missing PRODUCTION_STRIPE_SECRET_KEY environment variable');
 }
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = new Stripe(process.env.PRODUCTION_STRIPE_SECRET_KEY);
 
 export async function POST(req) {
   try {

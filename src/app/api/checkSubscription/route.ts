@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { setSubscriptionStatus } from '@/app/lib/data';
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = new Stripe(process.env.PRODUCTION_STRIPE_SECRET_KEY);
 
 export async function GET(req) {
   try {

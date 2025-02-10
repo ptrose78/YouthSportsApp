@@ -7,10 +7,19 @@ import { selectTeams } from '../store/features/dataSlice';
 import Link from 'next/link';
 import NavBar from '@/app/components/NavBar';
 
+interface Game {
+  id: number;
+  team_name: string;
+  opponent_name: string;
+  created_at: string;
+  game_length: number;
+}
+
 export default function PlayersList() {
   const dispatch = useAppDispatch();
   const { games, loading: gamesLoading, error: gamesError } = useAppSelector((state) => state.data);
   const { teams, loading: teamsLoading, error: teamsError } = useAppSelector((state) => state.data);
+  const [gamesUpdated, setGamesUpdated] = useState(false); // New state variable
   
 
   const [selectedGameId, setSelectedGameId] = useState(null); // To track the selected game
@@ -19,7 +28,10 @@ export default function PlayersList() {
 
   useEffect(() => {
     dispatch(getGames()); // Fetch games when component mounts
-    dispatch(getTeams());
+  }, [dispatch, gamesUpdated]); 
+
+  useEffect(() => {
+    dispatch(getTeams());  // Fetch teams when component mounts
   }, [dispatch]);
 
 
@@ -51,7 +63,30 @@ export default function PlayersList() {
         setSelectedOpponentName(selectedGame.opponent_name);
       }
     }
-  }, [selectedGameId, games]); // Dependency array ensures the effect runs only when selectedGameId changes
+  }, [selectedGameId]); // Dependency array ensures the effect runs only when selectedGameId changes
+
+  const handleDelete = async (game_id: number) => {
+    try {
+      const response = await fetch('api/deleteGameAndStats/', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({game_id})
+      });
+     
+      if (!response.ok) {
+        throw new Error('Failed to delete game and stats');
+      }
+     
+      await dispatch(getGames());
+      setSelectedGameId(false);
+    } catch(error) {
+      throw new Error('Failed to delete game and stats');
+    } 
+  }
+
+
 
   const formatDateandTime = (date: string) => {
     const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric' };
@@ -81,7 +116,10 @@ export default function PlayersList() {
             onClick={() => setSelectedGameId(game.id)} // Set the selected game ID on click
             className="mb-2 p-2 cursor-pointer hover:bg-gray-200"
           >
-            {game.opponent_name} - {formatDateandTime(game.created_at)}
+            {game.opponent_name} - {formatDateandTime(game.created_at)} 
+            <span onClick={() => handleDelete(game.id)} className="cursor-pointer text-red-500 font-bold px-2 py-1 rounded hover:bg-red-100 transition"> 
+               X
+            </span>
           </li>
         ))}
       </ul>

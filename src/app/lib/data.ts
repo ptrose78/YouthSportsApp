@@ -329,7 +329,35 @@ export async function createGame(opponent_name: string, game_length: number) {
   }
 }
 
+export async function deleteGame(game_id: string) {
+    
+  try {
+    console.log("Deleting game:", game_id);
+    const { data: dataGameDelete, error: errorGameDelete } = await supabase
+    .from("games")
+    .delete()
+    .eq("id", game_id);
 
+    const { data: dataStatsDelete, error: errorStatsDelete } = await supabase
+    .from("players-stats")
+    .delete()
+    .eq("game_id", game_id);
+
+    if (errorGameDelete) {
+      console.error("Error deleting game:", errorGameDelete);
+      throw errorGameDelete;
+    }
+
+    if (errorStatsDelete) {
+      console.error("Error deleting stats:", errorStatsDelete);
+      throw errorStatsDelete;
+    }
+  } catch(error) {
+    console.error("Error:", error);
+    throw error;
+  }
+  return null;
+}
 
 
 

@@ -3,7 +3,7 @@ import { auth, currentUser } from "@clerk/nextjs/server"; // Clerk for auth
 import Stripe from "stripe";
 import { setSubscriptionStatus } from "@/app/lib/data";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = new Stripe(process.env.PRODUCTION_STRIPE_SECRET_KEY);
 
 export async function POST(req: Request) {
   try {
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
     const canceledSubscription = await stripe.subscriptions.cancel(subscriptionId);
 
     console.log("canceledSubscription", canceledSubscription);
-        
+
     // Set subscription status in the database
     await setSubscriptionStatus("inactive");
 

@@ -21,17 +21,22 @@ export default function NavBar() {
   };
 
   const cancelSubscription = async () => {
-    alert("Are you sure you want to cancel your subscription?");
-    setLoading(true);
-    try {
-      const res = await fetch("/api/cancelSubscription", { method: "POST" });
-      const data = await res.json();
-      alert(data.message || "Subscription canceled!");
-      window.location.reload();
-    } catch (err) {
-      alert("Failed to cancel subscription.");
-    } finally {
-      setLoading(false);
+    const confirmed = confirm("Are you sure you want to cancel your subscription?"); // Use confirm()
+  
+    if (confirmed) {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/cancelSubscription", { method: "POST" });
+        const data = await res.json();
+        alert(data.message || "Subscription canceled!");
+        window.location.reload();
+      } catch (err) {
+        alert("Failed to cancel subscription.");
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      console.log("Subscription cancellation cancelled by user.");
     }
   };
 
