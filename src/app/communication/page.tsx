@@ -8,7 +8,7 @@ import NavBar from '../components/NavBar';
 import Link from 'next/link';
 import { PacmanLoader } from 'react-spinners'; // Import a spinner component
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_PRODUCTION_STRIPE_PUBLISHABLE_KEY);
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
 const MyRestrictedComponent = () => {
   const { user, isLoaded, isSignedIn } = useUser();

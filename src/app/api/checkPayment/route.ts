@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { setSubscriptionStatus } from "@/app/lib/data"; // Your function to update DB
 
-const stripe = new Stripe(process.env.PRODUCTION_STRIPE_SECRET_KEY!, {
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-01-27.acacia",
 });
 
