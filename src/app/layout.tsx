@@ -6,8 +6,8 @@ import ClientLayout from '@/app/RootLayout.client'; // Import ClientLayout
 
 // Define the metadata for the app
 export const metadata: Metadata = {
-  title: "Youth Sports App",
-  description: "Youth Sports App",
+  title: "HoopzTracker",
+  description: "The HoopzTracker App is a web-based platform designed to track stats and streamline email communications for youth basketball teams.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

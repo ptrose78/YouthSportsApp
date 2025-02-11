@@ -18,14 +18,17 @@ export async function sendEmail(formData: FormData) {
   const message = formData.get("message") as string;
   const file = formData.get("attachment") as File | null;
   console.log("file", file);
+  console.log("file.name", file?.name);
 
   const emailList = recipientsString.split(",").map(email => email.trim());
 
   let attachment_url = null;
   let attachments = [];
 
-  if (file) {
+
+  if (file && file.name && file.name !== "undefined") {
     // Upload to Supabase for later access
+    console.log("Inside if block"); // Debugging
     attachment_url = await uploadFile(file);
 
     // Convert to Base64 for direct email attachment
