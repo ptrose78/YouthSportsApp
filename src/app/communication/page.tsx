@@ -166,10 +166,10 @@ const MyRestrictedComponent = () => {
   ) : (
     <>
       <NavBar />
-      <div className="flex justify-center items-center h-screen flex-col mt-6">
+      <div className="flex justify-center items-center flex-col mt-10">
         <div className="text-center">
           <h1 className="text-2xl font-bold">Subscribe for Access</h1>
-          <p className="mt-2">Please subscribe to access this content.</p>
+          <p className="mt-2">Please subscribe to send emails to your team.</p>
           <button
             onClick={handleSubscribe}
             className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"

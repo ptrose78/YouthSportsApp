@@ -17,7 +17,7 @@ export default function Scoreboard() {
   };
 
   return (
-    <>
+    <div>
       <NavBar />
       <div className="grid grid-rows-[auto_1fr_auto] items-center justify-items-center min-h-screen p-8 sm:p-10 font-[family-name:var(--font-geist-sans)] overflow-x-hidden">
         <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start w-full max-w-screen-xl mx-auto">
@@ -39,7 +39,7 @@ export default function Scoreboard() {
                   <PacmanLoader color="#36d7b7" size={20} />
                 </div>
               )}
-              <Players onLoading={handlePlayersLoading} /> {/* Pass the callback */}
+              <Players onLoading={handlePlayersLoading} />
               <PlayerForm />
             </div>
             <div className="flex-1">
@@ -48,6 +48,6 @@ export default function Scoreboard() {
           </div>
         </main>
       </div>
-    </>
+    </div>
   );
 }

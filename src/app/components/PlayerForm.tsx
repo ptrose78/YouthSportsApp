@@ -63,7 +63,7 @@ const PlayerForm = () => {
 
         <button 
           type="submit" 
-          className="w-full bg-blue-500 hover:bg-green-600 text-white font-semibold py-2 rounded-lg transition duration-300"
+          className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded-lg transition duration-300"
         >
           Add Player
         </button>
