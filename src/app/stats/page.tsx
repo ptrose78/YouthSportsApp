@@ -63,7 +63,7 @@ export default function PlayersList() {
         setSelectedOpponentName(selectedGame.opponent_name);
       }
     }
-  }, [selectedGameId]); // Dependency array ensures the effect runs only when selectedGameId changes
+  }, [selectedGameId, games]); // Dependency array ensures the effect runs only when selectedGameId changes
 
   const handleDelete = async (game_id: number) => {
     try {

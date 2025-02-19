@@ -53,7 +53,7 @@ export default function LandingPage() {
         <div className="container mx-auto px-6 py-16">
           <div className="flex flex-col md:flex-row items-center">
             <div className="md:w-1/2 md:pr-12">
-              <h1 className="text-4xl md:text-5xl font-bold mb-6">Elevate Your Team's Performance with HoopzTracker</h1>
+              <h1 className="text-4xl md:text-5xl font-bold mb-6">Elevate Your Team&#39;s Performance with HoopzTracker</h1>
               <p className="text-xl mb-8">
                 Track stats, analyze box scores, and streamline team communications - all in one powerful app.
               </p>
@@ -175,7 +175,7 @@ function FeatureCard({ title, description, icon }) {
 function TestimonialCard({ quote, author, team }) {
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <p className="text-gray-600 italic mb-4">"{quote}"</p>
+      <p className="text-gray-600 italic mb-4">&#34;{quote}&#34;</p>
       <div className="font-semibold">{author}</div>
       <div className="text-sm text-gray-500">{team}</div>
     </div>
