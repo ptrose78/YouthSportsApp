@@ -1,8 +1,8 @@
-# Youth Sports App
+# Hoopz Tracker
 
 ## Overview
 
-The Youth Sports App is a web-based platform designed to streamline communication and team management for youth sports teams. It allows coaches, team managers, and players to interact efficiently through features such as email communication, subscription-based access, and game/event organization.
+The Hoopz Tracker App is a web-based platform designed to streamline communication and team management for youth sports teams. It allows coaches, team managers, and players to interact efficiently through features such as email communication, subscription-based access, and game/event organization.
 
 ## Features
 
@@ -20,3 +20,6 @@ The Youth Sports App is a web-based platform designed to streamline communicatio
 - **Authentication**: Clerk
 - **Payments**: Stripe
 - **Database**: Supabase
+
+## License
+This project is licensed under the MIT License.
