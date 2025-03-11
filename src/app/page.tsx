@@ -5,6 +5,16 @@ import Link from "next/link"
 import { SignInButton, SignUpButton, UserButton, useUser } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
+import { Swiper, SwiperSlide } from "swiper/react"
+import "swiper/css"
+import "swiper/css/navigation"
+import { Navigation, Autoplay } from "swiper/modules"
+
+const images = [
+  "/assets/game01.JPG",
+  "/assets/stats01.JPG",
+  "/assets/comm01.JPG",
+]
 
 export default function LandingPage() {
   const router = useRouter();
@@ -50,36 +60,42 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <header className="bg-orange-500 text-white">
-        <div className="container mx-auto px-6 py-16">
-          <div className="flex flex-col md:flex-row items-center">
-            <div className="md:w-1/2 md:pr-12">
-              <h1 className="text-4xl md:text-5xl font-bold mb-6">Elevate Your Team&#39;s Performance with HoopzTracker</h1>
-              <p className="text-xl mb-8">
-                Track stats, analyze box scores, and streamline team communications - all in one powerful app.
-              </p>
-              <div>
-              {user ? (
-                <UserButton afterSignOutUrl="/" />
-              ) : (
-                <>
-                  <SignUpButton mode="modal">
-                  <button className="bg-white text-orange-500 hover:bg-gray-100 rounded-md py-2 px-4">
-                      Sign Up
-                  </button>
-                  </SignUpButton>
-                </>
-              )}
-            </div>
-            </div>
-            <div className="md:w-1/2 mt-12 md:mt-0">
-              <Image
-                src="/assets/scoreboard01.JPG"
-                alt="HoopzTracker Dashboard"
-                width={600}
-                height={400}
-                className="rounded-lg shadow-lg"
-              />
-            </div>
+        <div className="container mx-auto px-6 py-16 flex flex-col md:flex-row items-center">
+          <div className="md:w-1/2 md:pr-12">
+            <h1 className="text-4xl md:text-5xl font-bold mb-6">
+              Elevate Your Team&#39;s Performance with HoopzTracker
+            </h1>
+            <p className="text-xl mb-8">
+              Track stats, analyze box scores, and streamline team communications - all in one powerful app.
+            </p>
+            {!user && (
+              <SignUpButton mode="modal">
+                <button className="bg-white text-orange-500 hover:bg-gray-100 rounded-md py-2 px-4">
+                  Sign Up
+                </button>
+              </SignUpButton>
+            )}
+          </div>
+
+          {/* Image Carousel */}
+          <div className="md:w-1/2 mt-12 md:mt-0 relative">
+          <Swiper
+            modules={[Navigation, Autoplay]}
+            autoplay={{ delay: 4000 }}
+            loop   
+          >
+            {images.map((src, index) => (
+              <SwiperSlide key={index} className=" flex justify-center items-center">
+                <Image 
+                  src={src} 
+                  alt={`Slide ${index + 1}`} 
+                  width={800} 
+                  height={600} 
+                  className="rounded-lg w-full h-auto"
+                />
+              </SwiperSlide>
+            ))}
+          </Swiper>     
           </div>
         </div>
       </header>
