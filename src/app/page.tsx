@@ -70,7 +70,7 @@ export default function LandingPage() {
             </p>
             {!user && (
               <SignUpButton mode="modal">
-                <button className="bg-white text-orange-500 hover:bg-gray-100 rounded-md py-2 px-4">
+                <button className="bg-white text-orange-500 hover:bg-gray-100 rounded-md py-2 px-4 mb-8">
                   Sign Up
                 </button>
               </SignUpButton>
@@ -78,24 +78,25 @@ export default function LandingPage() {
           </div>
 
           {/* Image Carousel */}
-          <div className="md:w-1/2 mt-12 md:mt-0 relative">
-          <Swiper
-            modules={[Navigation, Autoplay]}
-            autoplay={{ delay: 4000 }}
-            loop   
-          >
-            {images.map((src, index) => (
-              <SwiperSlide key={index} className=" flex justify-center items-center">
-                <Image 
-                  src={src} 
-                  alt={`Slide ${index + 1}`} 
-                  width={800} 
-                  height={600} 
-                  className="rounded-lg w-full h-auto"
-                />
-              </SwiperSlide>
-            ))}
-          </Swiper>     
+          <div className="overflow-hidden w-full">
+            <Swiper
+              modules={[Navigation, Autoplay]}
+              autoplay={{ delay: 4000 }}
+              loop
+              className="w-full"
+            >
+              {images.map((src, index) => (
+                <SwiperSlide key={index} className="flex justify-center items-center">
+                  <Image 
+                    src={src} 
+                    alt={`Slide ${index + 1}`} 
+                    width={400} 
+                    height={400} 
+                    className="rounded-lg w-full h-auto object-contain"
+                  />
+                </SwiperSlide>
+              ))}
+            </Swiper>     
           </div>
         </div>
       </header>
